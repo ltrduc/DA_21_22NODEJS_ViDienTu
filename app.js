@@ -1,13 +1,19 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+var session = require('express-session')
+var flash = require('express-flash')
+const logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+// Import DataBase
+const db = require('./config/mongoose');
 
-var app = express();
+//Import Router
+const authRouter = require('./routes/auth');
+const indexRouter = require('./routes/index');
+
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -16,19 +22,35 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('obank'));
+app.use(session({ cookie: { maxAge: 60000 } }));
+app.use(flash())
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+const checkLogin = (req, res, next) => {
+  if (req.session.user) {
+    return res.redirect('/');
+  }
+  next();
+};
+
+const checkSession = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect('/auth/login');
+  }
+  next();
+};
+
+app.use('/auth', checkLogin, authRouter);
+app.use('/', checkSession, indexRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
