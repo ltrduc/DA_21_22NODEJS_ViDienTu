@@ -3,15 +3,29 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const { check, validationResult } = require('express-validator')
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 const { mailUser, mailPass } = process.env;
 
 const router = express.Router();
 const UserModel = require('../models/user');
 
-// Middleware
+/*
+|------------------------------------------------------------------------------------------------------
+| MIDDLEWARE
+|------------------------------------------------------------------------------------------------------
+*/
 const checkLogin = (req, res, next) => {
   if (req.session.user) {
+    return res.redirect('/');
+  }
+  next();
+}
+
+const checkSession = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect('/auth/login');
+  }
+  if (req.session.user.status) {
     return res.redirect('/');
   }
   next();
@@ -60,10 +74,21 @@ const checkInputRegister = [
     .notEmpty().withMessage('Vui lòng nhập địa chỉ hiện tại!'),
 ];
 
+const checkInputChangePassword = [
+  check('newPassword')
+    .exists().withMessage('Chưa có mật khẩu mới, mật khẩu mới cần được gửi với key là newPassword!')
+    .notEmpty().withMessage('Vui lòng nhập mật khẩu mới!')
+    .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
+  check('confirmPassword')
+    .exists().withMessage('Chưa có xác nhận mật khẩu, xác nhận mật khẩu cần được gửi với key là confirmPassword!')
+    .notEmpty().withMessage('Vui lòng nhập xác nhận mật khẩu!')
+    .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
+];
+
 /*
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
 */
 router.get('/login', checkLogin, (req, res, next) => {
   res.render('auth/login', {
@@ -89,13 +114,13 @@ router.post('/login', checkInputLogin, async (req, res, next) => {
 
     var user = await UserModel.findOne({ username }).exec();
     if (!user) {
-      req.flash('error', "Số tài khoản hoặc mật khẩu không tồn tại!");
+      req.flash('error', 'Số tài khoản hoặc mật khẩu không tồn tại!');
       return res.redirect('/auth/login');
     }
 
     var matched = bcrypt.compareSync(password, user.password)
     if (!matched) {
-      req.flash('error', "Số tài khoản hoặc mật khẩu không tồn tại!");
+      req.flash('error', 'Số tài khoản hoặc mật khẩu không tồn tại!');
       return res.redirect('/auth/login');
     }
 
@@ -107,9 +132,9 @@ router.post('/login', checkInputLogin, async (req, res, next) => {
 });
 
 /*
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
 | ĐĂNG KÝ TÀI KHOẢN NGƯỜI DÙNG
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
 */
 router.get('/register', checkLogin, (req, res, next) => {
   res.render('auth/register', {
@@ -149,7 +174,7 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
       for (let i = 0; i < files.length; i++) {
         fs.unlinkSync(files[i].path);
       }
-      req.flash('error', "Vui lòng cập nhật lại CMND/CCCD!");
+      req.flash('error', 'Vui lòng cập nhật lại CMND/CCCD!');
       return res.redirect('/auth/register');
     }
 
@@ -157,7 +182,7 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
       for (let i = 0; i < files.length; i++) {
         fs.unlinkSync(files[i].path);
       }
-      req.flash('error', "Địa chỉ Email hoặc số điện thoại đã tồn tại!");
+      req.flash('error', 'Địa chỉ Email hoặc số điện thoại đã tồn tại!');
       return res.redirect('/auth/register');
     }
 
@@ -194,15 +219,16 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
               for (let i = 0; i < files.length; i++) {
                 fs.unlinkSync(files[i].path);
               }
-              req.flash('error', "Không thể tạo tài khoản, vui lòng thử lại!");
+              req.flash('error', 'Không thể tạo tài khoản, vui lòng thử lại!');
               return res.redirect('/auth/register');
             }
             for (let i = 0; i < files.length; i++) {
               fs.renameSync(files[i].path, `public/uploads/${username}/${files[i].filename}`);
             }
           })
-          return res.redirect('/auth/email');
         }
+        req.flash('success', 1);
+        return res.redirect('/auth/email');
       }
     }
   } catch (error) {
@@ -210,18 +236,70 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
   }
 });
 
+router.get('/email', (req, res, next) => {
+  var success = req.flash('success') || [];
+  if (!success.length) {
+    return res.redirect('auth/login');
+  }
+  res.render('auth/email');
+});
+
 /*
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
+| ĐỔI MẬT KHẨU LẦN ĐẦU ĐĂNG NHẬP
+|------------------------------------------------------------------------------------------------------
+*/
+router.get('/change-password', checkSession, (req, res, next) => {
+  res.render('auth/change_password', {
+    error: req.flash('error') || '',
+    newPassword: req.flash('newPassword') || '',
+    confirmPassword: req.flash('confirmPassword') || '',
+  });
+});
+
+router.post('/change-password', checkInputChangePassword, async (req, res, next) => {
+  try {
+    var result = validationResult(req);
+    var { newPassword, confirmPassword } = req.body;
+
+    req.flash('newPassword', newPassword);
+    req.flash('confirmPassword', confirmPassword);
+
+    if (result.errors.length !== 0) {
+      result = result.mapped();
+      for (fields in result) {
+        req.flash('error', result[fields].msg);
+        return res.redirect('/auth/register');
+      }
+    }
+    
+    if (newPassword !== confirmPassword) {
+      req.flash('error', 'Mật khẩu không trùng khớp!')
+      return res.redirect('/auth/password/change');
+    }
+
+    UserModel.findByIdAndUpdate({ _id: req.session.user._id }, { password: bcrypt.hashSync(confirmPassword, 10), status: 1 }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+        return res.redirect('/auth/password/change');
+      }
+    })
+
+    req.session.user = await UserModel.findById(req.session.user._id).exec();
+    res.redirect('/');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+});
+
+/*
+|------------------------------------------------------------------------------------------------------
 | ĐĂNG XUẤT TÀI KHOẢN NGƯỜI DÙNG
-|--------------------------------------------------------------------------
+|------------------------------------------------------------------------------------------------------
 */
 router.get('/logout', (req, res, next) => {
   req.session.destroy();
-  res.redirect("/auth/login");
-});
-
-router.get('/email', (req, res, next) => {
-  res.render("auth/email");
+  res.redirect('/auth/login');
 });
 
 module.exports = router;

@@ -41,6 +41,9 @@ const checkSession = (req, res, next) => {
   if (!req.session.user) {
     return res.redirect('/auth/login');
   }
+  if (!req.session.user.status) {
+    return res.redirect('/auth/change-password');
+  }
   next();
 }
 
