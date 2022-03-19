@@ -9,6 +9,14 @@ const { mailUser, mailPass } = process.env;
 const router = express.Router();
 const UserModel = require('../models/user');
 
+// Middleware
+const checkLogin = (req, res, next) => {
+  if (req.session.user) {
+    return res.redirect('/');
+  }
+  next();
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploads/images');
@@ -57,7 +65,7 @@ const checkInputRegister = [
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
 |--------------------------------------------------------------------------
 */
-router.get('/login', (req, res, next) => {
+router.get('/login', checkLogin, (req, res, next) => {
   res.render('auth/login', {
     error: req.flash('error') || '',
     username: req.flash('username') || '',
@@ -103,7 +111,7 @@ router.post('/login', checkInputLogin, async (req, res, next) => {
 | ĐĂNG KÝ TÀI KHOẢN NGƯỜI DÙNG
 |--------------------------------------------------------------------------
 */
-router.get('/register', (req, res, next) => {
+router.get('/register', checkLogin, (req, res, next) => {
   res.render('auth/register', {
     error: req.flash('error') || '',
     fullname: req.flash('fullname') || '',
