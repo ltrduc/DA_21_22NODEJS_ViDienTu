@@ -21,14 +21,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Middleware
-const checkLogin = (req, res, next) => {
-  if (req.session.user) {
-    return res.redirect('/');
-  }
-  next();
-}
-
 const checkInputLogin = [
   check('username')
     .exists().withMessage('Chưa có số tài khoản, số tài khoản cần được gửi với key là username!')
@@ -65,7 +57,7 @@ const checkInputRegister = [
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
 |--------------------------------------------------------------------------
 */
-router.get('/login', checkLogin, (req, res, next) => {
+router.get('/login', (req, res, next) => {
   res.render('auth/login', {
     error: req.flash('error') || '',
     username: req.flash('username') || '',

@@ -37,6 +37,14 @@ app.use(session({
 app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware
+const checkLogin = (req, res, next) => {
+  if (req.session.user) {
+    return res.redirect('/');
+  }
+  next();
+}
+
 const checkSession = (req, res, next) => {
   if (!req.session.user) {
     return res.redirect('/auth/login');
@@ -44,7 +52,7 @@ const checkSession = (req, res, next) => {
   next();
 }
 
-app.use('/auth', authRouter);
+app.use('/auth', checkLogin, authRouter);
 app.use('/', checkSession, indexRouter);
 
 // catch 404 and forward to error handler
