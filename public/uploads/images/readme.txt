@@ -1,0 +1,1 @@
+File dùng để chứ ảnh tạm thời.

@@ -11,6 +11,7 @@ const user = new mongoose.Schema({
     id_card: Array,
     role: Number,
     activate: { type: Number, default: 0 },
+    status: { type: Number, default: 0 },
     created_at: { type: Date, default: Date.now },
 }, { collection: 'user', versionKey: false });
 

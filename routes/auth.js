@@ -3,24 +3,33 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const { check, validationResult } = require('express-validator')
+const nodemailer = require("nodemailer");
+const { mailUser, mailPass } = process.env;
 
 const router = express.Router();
 const UserModel = require('../models/user');
 
-//cấu hình lưu trữ file khi upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/temps');
+    cb(null, 'public/uploads/images');
   },
   filename: function (req, file, cb) {
     const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, filename + '-' + file.originalname);
   }
 });
-//Khởi tạo middleware với cấu hình trên, lưu trên local của server khi dùng multer
-const upload = multer({ storage: storage })
 
-const checkLogin = [
+const upload = multer({ storage: storage });
+
+// Middleware
+const checkLogin = (req, res, next) => {
+  if (req.session.user) {
+    return res.redirect('/');
+  }
+  next();
+}
+
+const checkInputLogin = [
   check('username')
     .exists().withMessage('Chưa có số tài khoản, số tài khoản cần được gửi với key là username!')
     .notEmpty().withMessage('Vui lòng nhập số tài khoản!'),
@@ -30,7 +39,7 @@ const checkLogin = [
     .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
 ];
 
-const checkRegister = [
+const checkInputRegister = [
   check('fullname')
     .exists().withMessage('Chưa có tên người dùng, tên người dùng cần được gửi với key là fullname!')
     .notEmpty().withMessage('Vui lòng nhập tên người dùng!'),
@@ -56,42 +65,146 @@ const checkRegister = [
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
 |--------------------------------------------------------------------------
 */
-router.get('/login', (req, res, next) => {
-  const error = req.flash('error') || '';
-  const username = req.flash('username') || '';
-  res.render('auth/login', { username, error });
+router.get('/login', checkLogin, (req, res, next) => {
+  res.render('auth/login', {
+    error: req.flash('error') || '',
+    username: req.flash('username') || '',
+  });
 });
 
-router.post('/login', checkLogin, async (req, res, next) => {
+router.post('/login', checkInputLogin, async (req, res, next) => {
   try {
     var result = validationResult(req);
     var { username, password } = req.body;
 
     req.flash('username', username);
 
-    if (result.errors.length === 0) {
-      var user = await UserModel.findOne({ username }).exec();
-      if (!user) {
-        req.flash('error', "Tài khoản hoặc mật khẩu không đúng!");
-        return res.redirect('login');
+    if (result.errors.length !== 0) {
+      result = result.mapped();
+      for (fields in result) {
+        req.flash('error', result[fields].msg);
+        return res.redirect('/auth/login');
       }
-
-      var hashed = bcrypt.compareSync(password, user.password);
-      if (!hashed) {
-        req.flash('error', "Tài khoản hoặc mật khẩu không đúng!");
-        return res.redirect('login');
-      }
-
-      req.session.user = user;
-      return res.redirect('/');
     }
 
-    result = result.mapped();
-    for (fields in result) {
-      req.flash('error', result[fields].msg);
-      break;
+    var user = await UserModel.findOne({ username }).exec();
+    if (!user) {
+      req.flash('error', "Số tài khoản hoặc mật khẩu không tồn tại!");
+      return res.redirect('/auth/login');
     }
-    return res.redirect('login');
+
+    var matched = bcrypt.compareSync(password, user.password)
+    if (!matched) {
+      req.flash('error', "Số tài khoản hoặc mật khẩu không tồn tại!");
+      return res.redirect('/auth/login');
+    }
+
+    req.session.user = user;
+    res.redirect('/');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| ĐĂNG KÝ TÀI KHOẢN NGƯỜI DÙNG
+|--------------------------------------------------------------------------
+*/
+router.get('/register', (req, res, next) => {
+  res.render('auth/register', {
+    error: req.flash('error') || '',
+    fullname: req.flash('fullname') || '',
+    email: req.flash('email') || '',
+    birthday: req.flash('birthday') || '',
+    phone: req.flash('phone') || '',
+    address: req.flash('address') || '',
+  });
+});
+
+router.post('/register', upload.array('id_card', 3), checkInputRegister, async (req, res, next) => {
+  try {
+    var result = validationResult(req);
+    var files = req.files;
+    var { fullname, email, birthday, phone, address } = req.body;
+
+    req.flash('fullname', fullname);
+    req.flash('email', email);
+    req.flash('birthday', birthday);
+    req.flash('phone', phone);
+    req.flash('address', address);
+
+    if (result.errors.length !== 0) {
+      result = result.mapped();
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      for (fields in result) {
+        req.flash('error', result[fields].msg);
+        return res.redirect('/auth/register');
+      }
+    }
+
+    if (!files || files.length !== 2) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', "Vui lòng cập nhật lại CMND/CCCD!");
+      return res.redirect('/auth/register');
+    }
+
+    if (await UserModel.findOne({ email, phone }).exec()) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', "Địa chỉ Email hoặc số điện thoại đã tồn tại!");
+      return res.redirect('/auth/register');
+    }
+
+    while (true) {
+      var username = parseInt(Math.floor(Math.random() * (9999999999 - 1000000000)) + 1000000000);
+      var password = Math.random().toString(36).slice(-6);
+      var hashed = bcrypt.hashSync(password, 10);
+      var userDir = `public/uploads/${username}`;
+
+      if (!await UserModel.findOne({ username }).exec()) {
+        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], role: 1, });
+        if (user) {
+          var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: `${mailUser}`,
+              pass: `${mailPass}#`,
+            }
+          });
+
+          transporter.sendMail({
+            from: `${mailUser}`,
+            to: `${email}`,
+            subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - NGÂN HÀNG OBANK',
+            html: `<p>Cảm ơn bạn đã tin dùng ngân hàng của chúng tôi, đây là thông tin tài khoản của bạn:</p>
+            <b>Tên khách hàng: </b>${fullname} <br> 
+            <b>Số tài khoản: </b>${username} <br> 
+            <b>Mật khẩu: </b>${password} 
+            <p>Trân trọng ./.</p>`,
+          });
+
+          fs.mkdir(userDir, (error) => {
+            if (error) {
+              for (let i = 0; i < files.length; i++) {
+                fs.unlinkSync(files[i].path);
+              }
+              req.flash('error', "Không thể tạo tài khoản, vui lòng thử lại!");
+              return res.redirect('/auth/register');
+            }
+            for (let i = 0; i < files.length; i++) {
+              fs.renameSync(files[i].path, `public/uploads/${username}/${files[i].filename}`);
+            }
+          })
+          return res.redirect('/auth/email');
+        }
+      }
+    }
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
@@ -104,78 +217,11 @@ router.post('/login', checkLogin, async (req, res, next) => {
 */
 router.get('/logout', (req, res, next) => {
   req.session.destroy();
+  res.redirect("/auth/login");
 });
 
-/*
-|--------------------------------------------------------------------------
-| ĐĂNG KÝ TÀI KHOẢN NGƯỜI DÙNG
-|--------------------------------------------------------------------------
-*/
-router.get('/register', (req, res, next) => {
-  const error = req.flash('error') || '';
-  const fullname = req.flash('fullname') || '';
-  const email = req.flash('email') || '';
-  const birthday = req.flash('birthday') || '';
-  const phone = req.flash('phone') || '';
-  const address = req.flash('address') || '';
-
-  res.render('auth/register', { error, fullname, email, birthday, phone, address, });
-});
-
-router.post('/register', upload.array('id_card', 3), checkRegister, async (req, res, next) => {
-  try {
-    var result = validationResult(req);
-    var files = req.files;
-    var { fullname, email, birthday, phone, address } = req.body;
-
-    req.flash('fullname', fullname);
-    req.flash('email', email);
-    req.flash('birthday', birthday);
-    req.flash('phone', phone);
-    req.flash('address', address);
-
-    if (result.errors.length === 0) {
-      if (await UserModel.findOne({ email, phone }).exec()) {
-        req.flash('error', "Địa chỉ Email hoặc Số điện thoại đã tồn tại!");
-        return res.redirect('register');
-      }
-      if (!files || files.length === 0 || files.length < 2) {
-        req.flash('error', "Vui lòng cập nhật CMND/CCCD đầy đủ!");
-        return res.redirect('register');
-      }
-
-      while (true) {
-        var username = parseInt(Math.floor(Math.random() * (9999999999 - 1000000000)) + 1000000000);
-        var password = Math.random().toString(36).slice(-6);
-        var hashed = bcrypt.hashSync(password, 10);
-
-        if (!(await UserModel.findOne({ username, hashed }).exec())) {
-          var userDir = `public/uploads/${username}`
-
-          fs.mkdir(userDir, (error) => {
-            if (error) {
-              req.flash('error', "Không thể tạo tài khoản, vui lòng thử lại!");
-              return res.redirect('register');
-            }
-            for (let i = 0; i < files.length; i++) {
-              fs.renameSync(files[i].path, `public/uploads/${username}/${files[i].filename}`);
-            }
-          })
-          await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], role: 1, });
-          return res.render('auth/account', { fullname, email, username, password });
-        }
-      }
-    }
-
-    result = result.mapped();
-    for (fields in result) {
-      req.flash('error', result[fields].msg);
-      break;
-    }
-    return res.redirect('register');
-  } catch (error) {
-    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
-  }
+router.get('/email', (req, res, next) => {
+  res.render("auth/email");
 });
 
 module.exports = router;

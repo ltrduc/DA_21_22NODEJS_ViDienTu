@@ -1,9 +1,12 @@
+require('dotenv').config();
+
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-var session = require('express-session')
-var flash = require('express-flash')
+const credentials = require('./credentials.js');
+const session = require('express-session');
+const flash = require('express-flash');
 const logger = require('morgan');
 
 // Import DataBase
@@ -19,29 +22,29 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(require('cookie-parser')(credentials.cookieSecret))
+app.use(require('express-session')());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser('obank'));
-app.use(session({ cookie: { maxAge: 60000 } }));
-app.use(flash())
+app.use(session({
+  secret: 'obank',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 6000 }
+}));
+app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
-
-const checkLogin = (req, res, next) => {
-  if (req.session.user) {
-    return res.redirect('/');
-  }
-  next();
-};
 
 const checkSession = (req, res, next) => {
   if (!req.session.user) {
     return res.redirect('/auth/login');
   }
   next();
-};
+}
 
-app.use('/auth', checkLogin, authRouter);
+app.use('/auth', authRouter);
 app.use('/', checkSession, indexRouter);
 
 // catch 404 and forward to error handler

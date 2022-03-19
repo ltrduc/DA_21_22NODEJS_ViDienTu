@@ -1,8 +1,9 @@
 // require the library
 const mongoose = require('mongoose');
+const { URI_MONGODB } = process.env;
 
 // connect to the database
-mongoose.connect('mongodb://localhost/obank');
+mongoose.connect(URI_MONGODB);
 // aquire the connection (to check if it is successful)
 const db = mongoose.connection;
 // error
