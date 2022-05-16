@@ -2,102 +2,49 @@ const express = require('express');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
-const { check, validationResult } = require('express-validator')
+const { check, validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
 const { mailUser, mailPass } = process.env;
 
 const router = express.Router();
+
+// Import Model
 const UserModel = require('../models/user');
 
-/*
-|------------------------------------------------------------------------------------------------------
-| MIDDLEWARE
-|------------------------------------------------------------------------------------------------------
-*/
-const checkLogin = (req, res, next) => {
-  if (req.session.user) {
-    return res.redirect('/');
-  }
-  next();
-}
+// Import Middleware
+const Auth = require('../middleware/auth');
 
-const checkSession = (req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect('/auth/login');
-  }
-  if (req.session.user.status) {
-    return res.redirect('/');
-  }
-  next();
-}
+// Import Validators
+const RegisterValidator = require('./validators/register');
+const LoginValidator = require('./validators/login');
+const ChangePasswordValidator = require('./validators/change-password');
+const ResetPasswordValidator = require('./validators/reset-password');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads/images');
-  },
-  filename: function (req, file, cb) {
-    const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, filename + '-' + file.originalname);
-  }
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'public/uploads/images');
+    },
+    filename: function (req, file, cb) {
+      const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, filename + '-' + file.originalname);
+    }
+  })
 });
-
-const upload = multer({ storage: storage });
-
-const checkInputLogin = [
-  check('username')
-    .exists().withMessage('Chưa có số tài khoản, số tài khoản cần được gửi với key là username!')
-    .notEmpty().withMessage('Vui lòng nhập số tài khoản!'),
-  check('password')
-    .exists().withMessage('Chưa có mật khẩu, mật khẩu cần được gửi với key là password!')
-    .notEmpty().withMessage('Vui lòng nhập mật khẩu!')
-    .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
-];
-
-const checkInputRegister = [
-  check('fullname')
-    .exists().withMessage('Chưa có tên người dùng, tên người dùng cần được gửi với key là fullname!')
-    .notEmpty().withMessage('Vui lòng nhập tên người dùng!'),
-  check('email')
-    .exists().withMessage('Chưa có địa chỉ Email, Email cần được gửi với key là email!')
-    .notEmpty().withMessage('Vui lòng nhập địa chỉ Email!')
-    .isEmail().withMessage('Địa chỉ Email không hợp lệ!'),
-  check('birthday')
-    .exists().withMessage('Chưa có ngày sinh, ngày sinh cần được gửi với key là birthday!')
-    .notEmpty().withMessage('Vui lòng nhập ngày sinh!'),
-  check('phone')
-    .exists().withMessage('Chưa có số điện thoại, số điện thoại cần được gửi với key là phone!')
-    .notEmpty().withMessage('Vui lòng nhập số điện thoại!')
-    .isLength({ min: 10 }).withMessage('Số điện thoại phải tối thiểu 10 chữ số!')
-    .isLength({ max: 11 }).withMessage('Số điện thoại phải tối đa 11 chữ số!'),
-  check('address')
-    .exists().withMessage('Chưa có địa chỉ hiện tại, địa chỉ hiện tại cần được gửi với key là address!')
-    .notEmpty().withMessage('Vui lòng nhập địa chỉ hiện tại!'),
-];
-
-const checkInputChangePassword = [
-  check('newPassword')
-    .exists().withMessage('Chưa có mật khẩu mới, mật khẩu mới cần được gửi với key là newPassword!')
-    .notEmpty().withMessage('Vui lòng nhập mật khẩu mới!')
-    .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
-  check('confirmPassword')
-    .exists().withMessage('Chưa có xác nhận mật khẩu, xác nhận mật khẩu cần được gửi với key là confirmPassword!')
-    .notEmpty().withMessage('Vui lòng nhập xác nhận mật khẩu!')
-    .isLength({ min: 6 }).withMessage('mật khẩu phải tối thiểu 6 chữ số!'),
-];
 
 /*
 |------------------------------------------------------------------------------------------------------
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
 |------------------------------------------------------------------------------------------------------
 */
-router.get('/login', checkLogin, (req, res, next) => {
+router.get('/login', Auth.checkLogin, (req, res, next) => {
   res.render('auth/login', {
     error: req.flash('error') || '',
     username: req.flash('username') || '',
   });
 });
 
-router.post('/login', checkInputLogin, async (req, res, next) => {
+router.post('/login', LoginValidator, async (req, res, next) => {
   try {
     var result = validationResult(req);
     var { username, password } = req.body;
@@ -124,7 +71,19 @@ router.post('/login', checkInputLogin, async (req, res, next) => {
       return res.redirect('/auth/login');
     }
 
-    req.session.user = user;
+    req.session.user = {
+      id: user.id,
+      fullname: user.fullname,
+      email: user.email,
+      birthday: user.birthday,
+      phone: user.phone,
+      address: user.address,
+      role: user.role,
+      role: user.role,
+      activate: user.activate,
+      status: user.status,
+    };
+
     res.redirect('/');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
@@ -136,7 +95,7 @@ router.post('/login', checkInputLogin, async (req, res, next) => {
 | ĐĂNG KÝ TÀI KHOẢN NGƯỜI DÙNG
 |------------------------------------------------------------------------------------------------------
 */
-router.get('/register', checkLogin, (req, res, next) => {
+router.get('/register', Auth.checkLogin, (req, res, next) => {
   res.render('auth/register', {
     error: req.flash('error') || '',
     fullname: req.flash('fullname') || '',
@@ -147,7 +106,7 @@ router.get('/register', checkLogin, (req, res, next) => {
   });
 });
 
-router.post('/register', upload.array('id_card', 3), checkInputRegister, async (req, res, next) => {
+router.post('/register', upload.array('id_card', 3), RegisterValidator, async (req, res, next) => {
   try {
     var result = validationResult(req);
     var files = req.files;
@@ -178,11 +137,19 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
       return res.redirect('/auth/register');
     }
 
-    if (await UserModel.findOne({ email, phone }).exec()) {
+    if (await UserModel.findOne({ email }).exec()) {
       for (let i = 0; i < files.length; i++) {
         fs.unlinkSync(files[i].path);
       }
-      req.flash('error', 'Địa chỉ Email hoặc số điện thoại đã tồn tại!');
+      req.flash('error', 'Địa chỉ Email đã tồn tại!');
+      return res.redirect('/auth/register');
+    }
+
+    if (await UserModel.findOne({ phone }).exec()) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', 'Số điện thoại đã tồn tại!');
       return res.redirect('/auth/register');
     }
 
@@ -206,8 +173,8 @@ router.post('/register', upload.array('id_card', 3), checkInputRegister, async (
           transporter.sendMail({
             from: `${mailUser}`,
             to: `${email}`,
-            subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - NGÂN HÀNG OBANK',
-            html: `<p>Cảm ơn bạn đã tin dùng ngân hàng của chúng tôi, đây là thông tin tài khoản của bạn:</p>
+            subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
+            html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. Đây là thông tin tài khoản của bạn:</p>
             <b>Tên khách hàng: </b>${fullname} <br> 
             <b>Số tài khoản: </b>${username} <br> 
             <b>Mật khẩu: </b>${password} 
@@ -249,7 +216,7 @@ router.get('/email', (req, res, next) => {
 | ĐỔI MẬT KHẨU LẦN ĐẦU ĐĂNG NHẬP
 |------------------------------------------------------------------------------------------------------
 */
-router.get('/change-password', checkSession, (req, res, next) => {
+router.get('/change-password', Auth.checkSession, (req, res, next) => {
   res.render('auth/change_password', {
     error: req.flash('error') || '',
     newPassword: req.flash('newPassword') || '',
@@ -257,7 +224,7 @@ router.get('/change-password', checkSession, (req, res, next) => {
   });
 });
 
-router.post('/change-password', checkInputChangePassword, async (req, res, next) => {
+router.post('/change-password', ChangePasswordValidator, async (req, res, next) => {
   try {
     var result = validationResult(req);
     var { newPassword, confirmPassword } = req.body;
@@ -272,13 +239,15 @@ router.post('/change-password', checkInputChangePassword, async (req, res, next)
         return res.redirect('/auth/register');
       }
     }
-    
+
     if (newPassword !== confirmPassword) {
       req.flash('error', 'Mật khẩu không trùng khớp!')
       return res.redirect('/auth/password/change');
     }
 
-    UserModel.findByIdAndUpdate({ _id: req.session.user._id }, { password: bcrypt.hashSync(confirmPassword, 10), status: 1 }, (error, data) => {
+    var user = await UserModel.findById(req.session.user.id).exec();
+
+    UserModel.findByIdAndUpdate({ _id: user._id }, { password: bcrypt.hashSync(confirmPassword, 10), status: 1 }, (error, data) => {
       if (error) {
         req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
         return res.redirect('/auth/password/change');
@@ -287,6 +256,76 @@ router.post('/change-password', checkInputChangePassword, async (req, res, next)
 
     req.session.user = await UserModel.findById(req.session.user._id).exec();
     res.redirect('/');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+});
+
+/*
+|------------------------------------------------------------------------------------------------------
+| Đặt lại mật khẩu
+|------------------------------------------------------------------------------------------------------
+*/
+router.get('/reset-password', (req, res, next) => {
+  res.render('auth/reset-password', {
+    error: req.flash('error') || '',
+    email: req.flash('email') || '',
+  });
+});
+
+router.post('/reset-password', ResetPasswordValidator, async (req, res, next) => {
+  try {
+    var result = validationResult(req);
+    var { email } = req.body;
+
+    req.flash('email', email);
+
+    if (result.errors.length !== 0) {
+      result = result.mapped();
+      for (fields in result) {
+        req.flash('error', result[fields].msg);
+        return res.redirect('/auth/reset-password');
+      }
+    }
+
+    var user = await UserModel.findOne({ email }).exec();
+
+    if (!user) {
+      req.flash('error', 'Đỉa chỉ email không tồn tại!');
+      return res.redirect('/auth/reset-password');
+    }
+
+    var password = Math.random().toString(36).slice(-6);
+    var hashed = bcrypt.hashSync(password, 10);
+
+    UserModel.findByIdAndUpdate({ _id: user._id }, { password: hashed, status: 0 }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+        return res.redirect('/auth/password/change');
+      }
+
+      var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: `${mailUser}`,
+          pass: `${mailPass}#`,
+        }
+      });
+
+      transporter.sendMail({
+        from: `${mailUser}`,
+        to: `${email}`,
+        subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
+        html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. Đây là thông tin tài khoản của bạn sau khi đặt lại mật khẩu:</p>
+        <b>Tên khách hàng: </b>${data.fullname} <br> 
+        <b>Số tài khoản: </b>${data.username} <br> 
+        <b>Mật khẩu: </b>${password} 
+        <p>Trân trọng ./.</p>`,
+      });
+
+      req.flash('success', 1);
+      return res.redirect('/auth/email');
+    })
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }

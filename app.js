@@ -15,6 +15,11 @@ const db = require('./config/mongoose');
 //Import Router
 const authRouter = require('./routes/auth');
 const indexRouter = require('./routes/index');
+const adminRouter = require('./routes/admin');
+
+//Import Middleeare
+const Auth = require('./middleware/auth');
+const Permission = require('./middleware/permission');
 
 const app = express();
 
@@ -37,18 +42,9 @@ app.use(session({
 app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const checkSession = (req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect('/auth/login');
-  }
-  if (!req.session.user.status) {
-    return res.redirect('/auth/change-password');
-  }
-  next();
-}
-
 app.use('/auth', authRouter);
-app.use('/', checkSession, indexRouter);
+app.use('/', Auth.checkChangePassword, Permission.User, indexRouter);
+app.use('/admin', Auth.checkChangePassword, Permission.Admin, adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
