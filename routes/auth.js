@@ -256,10 +256,33 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
         req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
         return res.redirect('/auth/password/change');
       }
-    })
 
-    req.session.user = await UserModel.findById(req.session.user._id).exec();
-    res.redirect('/');
+      UserModel.findById(user.id, (error, data) => {
+        if (error) {
+          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+          return res.redirect('/auth/password/change');
+        }
+
+        req.session.user = {
+          id: data.id,
+          fullname: data.fullname,
+          email: data.email,
+          birthday: data.birthday,
+          phone: data.phone,
+          address: data.address,
+          role: data.role,
+          role: data.role,
+          activate: data.activate,
+          status: data.status,
+        };
+
+        if (req.session.user.role == 0) {
+          return res.redirect('/admin');
+        }
+
+        res.redirect('/');
+      })
+    })
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
