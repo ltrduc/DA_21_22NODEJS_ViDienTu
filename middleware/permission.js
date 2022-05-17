@@ -1,13 +1,13 @@
 module.exports.Admin = (req, res, next) => {
-    if (req.session.user.role == 0) {
-        next();
+    if (req.session.user.role > 0) {
+        return res.redirect('/');
     }
-    return res.redirect('/');
+    next();
 }
 
 module.exports.User = (req, res, next) => {
-    if (req.session.user.role == 0 || req.session.user.role == 1) {
-        next();
+    if (req.session.user.role > 1) {
+        return res.redirect('/auth/logout');
     }
-    return res.redirect('/auth/logout');
+    next();
 }

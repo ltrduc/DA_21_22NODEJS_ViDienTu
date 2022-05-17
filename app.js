@@ -43,8 +43,8 @@ app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/auth', authRouter);
-app.use('/', Auth.checkChangePassword, Permission.User, indexRouter);
 app.use('/admin', Auth.checkChangePassword, Permission.Admin, adminRouter);
+app.use('/', Auth.checkChangePassword, Permission.User, indexRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

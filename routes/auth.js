@@ -84,7 +84,11 @@ router.post('/login', LoginValidator, async (req, res, next) => {
       status: user.status,
     };
 
-    res.redirect('/');
+    if (req.session.user.role == 0) {
+      return res.redirect('/admin');
+    }
+
+    return res.redirect('/');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
@@ -160,7 +164,7 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
       var userDir = `public/uploads/${username}`;
 
       if (!await UserModel.findOne({ username }).exec()) {
-        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], role: 1, });
+        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], });
         if (user) {
           var transporter = nodemailer.createTransport({
             service: 'gmail',
