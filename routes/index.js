@@ -83,6 +83,7 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
                     return res.redirect('/recharge');
                 }
                 req.session.user.balance = Number.parseInt(req.session.user.balance) + amount;
+                req.session.save();
             })
 
             // Tạo lịch sử giao dịch tại đây
@@ -110,6 +111,7 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
                     
                 }
                 req.session.user.balance = Number.parseInt(req.session.user.balance) + amount;
+                req.session.save();
             })
 
             // Tạo lịch sử giao dịch tại đây
