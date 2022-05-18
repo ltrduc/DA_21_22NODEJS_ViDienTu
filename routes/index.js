@@ -11,6 +11,7 @@ const Auth = require('../middleware/auth');
 
 // Import Validators
 const RechargeValidator = require('./validators/recharge');
+const WithdrawValidator = require('./validators/withdraw');
 
 router.get('/', function (req, res, next) {
     res.json({ user: req.session.user });
@@ -133,13 +134,15 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
 */
 
 router.get('/withdraw', function(req, res, next){
-    res.render('user/withdraw');
+    res.render('user/withdraw', {error: req.flash('error')});
 })
 
-router.post('/withdraw', RechargeValidator, async function(req, res, next){
+router.post('/withdraw', WithdrawValidator, async function(req, res, next){
     try{
         var result = validationResult(req);
         var { cardNumber, expDate, cvv, amount, desc } = req.body;
+        cardNumber = Number.parseInt(cardNumber);
+        amount = Number.parseInt(amount);
 
         if (result.errors.length !== 0) {
             result = result.mapped();
@@ -149,7 +152,7 @@ router.post('/withdraw', RechargeValidator, async function(req, res, next){
             }
         }
 
-        if (!cardNumber == 111111){
+        if (cardNumber != 111111){
             req.flash('error', 'Thẻ này không hỗ trợ để rút tiền.');
             return res.redirect('/withdraw');
         }
@@ -159,33 +162,39 @@ router.post('/withdraw', RechargeValidator, async function(req, res, next){
                 req.flash('error', 'Mã CVV không chính xác.');
                 return res.redirect('/withdraw');
             }
-            if(expDate != ""){
+            if(expDate != "2022-10-10"){
                 req.flash('error', 'Ngày hết hạn không chính xác.');
                 return res.redirect('/withdraw');
             }
-            if("?"){
-                //Rút 2 lần mỗi ngày
-            }
-            if(!amount%50000 == 0){
+            // if("?"){
+            //     //Rút 2 lần mỗi ngày
+            // }
+            if( !(amount%50000 == 0) ){
                 req.flash('error', 'Số tiền rút phải là bội số của 50,000 đồng.');
                 return res.redirect('/withdraw');
             }
-            if(amount > req.session.user.balance){
+            if( (amount + amount*(5/100)) > req.session.user.balance){
                 req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch rút tiền.');
                 return res.redirect('/withdraw');
             }
-            if(amount > 5000000){
-                //Chờ duyệt
-            }
+            // if(amount > 5000000){
+            //     //Chờ duyệt
+            // }
 
             var user = await UserModel.findById(req.session.user.id).exec();
 
-            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: req.session.user.balance - amount - amount*(5/100), status: 1 }, (error, data) => {
+            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: Number.parseInt(req.session.user.balance) - amount - amount*(5/100), status: 1 }, (error, data) => {
                 if (error) {
                     req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
                     return res.redirect('/withdraw');
                 }
+                req.session.user.balance = Number.parseInt(req.session.user.balance) - amount - amount*(5/100);
+                req.session.save();
             })
+            // Tạo lịch sử giao dịch tại đây
+
+            req.flash('error', 'Rút tiền thành công!');
+            return res.redirect('/withdraw');
         }
     }
     catch(error) {
