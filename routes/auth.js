@@ -78,6 +78,7 @@ router.post('/login', LoginValidator, async (req, res, next) => {
       birthday: user.birthday,
       phone: user.phone,
       address: user.address,
+      balance: user.balance,
       role: user.role,
       role: user.role,
       activate: user.activate,
@@ -164,7 +165,7 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
       var userDir = `public/uploads/${username}`;
 
       if (!await UserModel.findOne({ username }).exec()) {
-        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], });
+        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], balance: 0});
         if (user) {
           var transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -270,6 +271,7 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
           birthday: data.birthday,
           phone: data.phone,
           address: data.address,
+          balance: user.balance,
           role: data.role,
           role: data.role,
           activate: data.activate,
