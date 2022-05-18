@@ -9,6 +9,7 @@ const user = new mongoose.Schema({
     username: String,
     password: String,
     id_card: Array,
+    balance: Number,
     role: { type: Number, default: 1 },
     activate: { type: Number, default: 0 },
     status: { type: Number, default: 0 },
