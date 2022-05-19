@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>OBank</title>
+  <link rel="stylesheet" href="/assets/vendors/iconfonts/mdi/css/materialdesignicons.css" />
+  <link rel="stylesheet" href="/assets/vendors/css/vendor.addons.css" />
+  <link rel="stylesheet" href="/assets/css/shared/style.css" />
+  <link rel="stylesheet" href="/assets/css/demo_1/style.css">
+  <link rel='shortcut icon' type='image/x-icon' href='/assets/images/logo_mini.png' />
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+</head>
+
+<body>
+  <div class="authentication-theme auth-style_1 pt-5">
+    <div class="row">
+      <div class="col-12 logo-section mb-4">
+        <a href="#" class="logo">
+          <img src="/assets/images/logo.png" alt="logo" />
+        </a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Lịch sử nạp tiền</h5>
+          </div>
+          <div class="card-body table-border-style">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Họ và tên</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian thực hiện giao dịch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% recharge.forEach((field, index) => { %>
+                    <tr>
+                      <td><%= ++index; %></td>
+                      <td><%= field.user_fullname; %></td>
+                      <td><%= field.amount; %></td>
+                      <td><%= field.status; %></td>
+                      <td><%= field.made_at; %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h5>Lịch sử rút tiền</h5>
+          </div>
+          <div class="card-body table-border-style">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Họ và tên</th>
+                    <th>Số tiền</th>
+                    <th>Phí giao dịch</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian thực hiện giao dịch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% withdraw.forEach((field, index) => { %>
+                    <tr>
+                      <td><%= ++index; %></td>
+                      <td><%= field.user_fullname; %></td>
+                      <td><%= field.amount; %></td>
+                      <td><%= field.fee; %></td>
+                      <td><%= field.status; %></td>
+                      <td><%= field.made_at; %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/vendors/js/core.js"></script>
+  <script src="/assets/vendors/js/vendor.addons.js"></script>
+  <script src="/assets/js/template.js"></script>
+</body>
+
+</html>
