@@ -5,6 +5,7 @@ const router = express.Router();
 
 // Import Model
 const UserModel = require('../models/user');
+const HistoryModel = require('../models/history');
 
 // Import Middleware
 const Auth = require('../middleware/auth');
@@ -23,11 +24,11 @@ router.get('/', function (req, res, next) {
 |------------------------------------------------------------------------------------------------------
 */
 
-router.get('/recharge', function(req, res, next){
+router.get('/recharge', function(req, res){
     res.render('user/recharge', {error: req.flash('error')});
 })
 
-router.post('/recharge', RechargeValidator, async function(req, res, next){
+router.post('/recharge', RechargeValidator, async function(req, res){
     try{
         var result = validationResult(req);
         var { cardNumber, expDate, cvv, amount } = req.body;
@@ -77,8 +78,9 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
             }
 
             var user = await UserModel.findById(req.session.user.id).exec();
+            var balance = Number.parseInt(user.balance); 
 
-            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: Number.parseInt(req.session.user.balance) + amount, status: 1 }, (error, data) => {
+            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance + amount, status: 1 }, (error, data) => {
                 if (error) {
                     req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
                     return res.redirect('/recharge');
@@ -88,6 +90,8 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
             })
 
             // Tạo lịch sử giao dịch tại đây
+            var history = await HistoryModel.create({ userID: user._id, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công"});
+
             
             req.flash('error', 'Nạp tiền thành công!');
             return res.redirect('/recharge');
@@ -104,18 +108,18 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
             }
 
             var user = await UserModel.findById(req.session.user.id).exec();
+            var balance = Number.parseInt(user.balance); 
 
-            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: Number.parseInt(req.session.user.balance) + amount, status: 1 }, (error, data) => {
+            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance + amount, status: 1 }, (error, data) => {
                 if (error) {
                     req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
                     return res.redirect('/recharge');
                     
                 }
-                req.session.user.balance = Number.parseInt(req.session.user.balance) + amount;
-                req.session.save();
             })
 
             // Tạo lịch sử giao dịch tại đây
+            var history = await HistoryModel.create({ userID: user._id, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công"});
 
             req.flash('error', 'Nạp tiền thành công!');
             return res.redirect('/recharge');
@@ -133,16 +137,17 @@ router.post('/recharge', RechargeValidator, async function(req, res, next){
 |------------------------------------------------------------------------------------------------------
 */
 
-router.get('/withdraw', function(req, res, next){
+router.get('/withdraw', function(req, res){
     res.render('user/withdraw', {error: req.flash('error')});
 })
 
-router.post('/withdraw', WithdrawValidator, async function(req, res, next){
+router.post('/withdraw', WithdrawValidator, async function(req, res){
     try{
         var result = validationResult(req);
         var { cardNumber, expDate, cvv, amount, desc } = req.body;
         cardNumber = Number.parseInt(cardNumber);
         amount = Number.parseInt(amount);
+        if (!desc){ desc = "" }
 
         if (result.errors.length !== 0) {
             result = result.mapped();
@@ -177,21 +182,26 @@ router.post('/withdraw', WithdrawValidator, async function(req, res, next){
                 req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch rút tiền.');
                 return res.redirect('/withdraw');
             }
-            // if(amount > 5000000){
-            //     //Chờ duyệt
-            // }
+            if(amount > 5000000){
+                //Chờ duyệt
+                var user = await UserModel.findById(req.session.user.id).exec();
+                var history = await HistoryModel.create({ userID: user._id, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount*(5/100), message: desc, status: "Đang chờ"});
+
+                req.flash('error', 'Số tiền bạn rút là trên 5 triệu đồng, vui lòng chờ ngân hàng thông qua.');
+                return res.redirect('/withdraw');
+            }
 
             var user = await UserModel.findById(req.session.user.id).exec();
+            var balance = Number.parseInt(user.balance);
 
-            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: Number.parseInt(req.session.user.balance) - amount - amount*(5/100), status: 1 }, (error, data) => {
+            UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance - amount - amount*(5/100), status: 1 }, (error, data) => {
                 if (error) {
                     req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
                     return res.redirect('/withdraw');
                 }
-                req.session.user.balance = Number.parseInt(req.session.user.balance) - amount - amount*(5/100);
-                req.session.save();
             })
             // Tạo lịch sử giao dịch tại đây
+            var history = await HistoryModel.create({ userID: user._id, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount*(5/100), message: desc, status: "Thành công"});
 
             req.flash('error', 'Rút tiền thành công!');
             return res.redirect('/withdraw');
