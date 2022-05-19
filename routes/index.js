@@ -213,4 +213,11 @@ router.post('/withdraw', WithdrawValidator, async function(req, res){
 
 })
 
+router.get('/history', async function(req, res){
+    var rechargeHistory = await HistoryModel.find({userID: req.session.user.id, transaction_type: "Nạp tiền"}).sort({ made_at: -1 }).exec();
+    var withdrawHistory = await HistoryModel.find({userID: req.session.user.id, transaction_type: "Rút tiền"}).sort({ made_at: -1 }).exec();
+    //Các loại giao dịch khác
+    res.render('user/history', {recharge: rechargeHistory, withdraw: withdrawHistory});
+})
+
 module.exports = router;
