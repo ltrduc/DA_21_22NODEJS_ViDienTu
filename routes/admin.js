@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// Import Model
 const UserModel = require('../models/user');
-const PermissionModel = require('../models/permission');
 
 router.get('/', async (req, res, next) => {
   try {
@@ -20,16 +18,7 @@ router.get('/', async (req, res, next) => {
 router.get('/account-wait-activated', async (req, res, next) => {
   try {
     var user = req.session.user;
-    var id_user = await PermissionModel.find({ account_activated: 0 }, { _id: 0, id_user: 1 }).exec();
-
-    var result = [];
-
-    for (var i = 0; i < id_user.length; i++) {
-      var data = await UserModel.findOne({ _id: id_user[i].id_user, role: 1 }).exec();
-      if (data) {
-        result.push(data);
-      }
-    }
+    var result = await UserModel.find({ activate: 0, role: 1 }).exec();
 
     return res.render('admin/account-wait-activated', {
       code: 0, message: 'Ok', user, result,
@@ -43,27 +32,15 @@ router.get('/account-wait-activated', async (req, res, next) => {
 
 router.post('/account-wait-activated', async (req, res, next) => {
   try {
-    var { id, activate, disable } = req.body;
+    var { id, activated } = req.body;
 
-    if (activate < 2) {
-      PermissionModel.findOneAndUpdate({ id_user: id }, { account_activated: activate }, (error, data) => {
-        console.log(activate);
-        if (error) {
-          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
-          return res.redirect('/admin/account-wait-activated');
-        }
-      })
-    }
-
-    if (typeof (disable) !== 'undefined') {
-      PermissionModel.findOneAndUpdate({ id_user: id }, { account_disabled: disable }, (error, data) => {
-        console.log(activate);
-        if (error) {
-          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
-          return res.redirect('/admin/account-wait-activated');
-        }
-      })
-    }
+    console.log(id, activated);
+    UserModel.findByIdAndUpdate(id, { activate: activated }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+        return res.redirect('/admin/account-wait-activated');
+      }
+    })
 
     req.flash('success', 'Cập nhật trạng thái thành công!')
     return res.redirect('/admin/account-wait-activated');
@@ -75,16 +52,7 @@ router.post('/account-wait-activated', async (req, res, next) => {
 router.get('/account-activated', async (req, res, next) => {
   try {
     var user = req.session.user;
-    var id_user = await PermissionModel.find({ account_activated: 1 }, { _id: 0, id_user: 1 }).exec();
-
-    var result = [];
-
-    for (var i = 0; i < id_user.length; i++) {
-      var data = await UserModel.findOne({ _id: id_user[i].id_user, role: 1 }).sort({ created_at: -1 }).exec();
-      if (data) {
-        result.push(data);
-      }
-    }
+    var result = await UserModel.find({ activate: 1, role: 1 }).sort({ created_at: -1 }).exec();
 
     return res.render('admin/account-activated', {
       code: 0, message: 'Ok', user, result,
@@ -99,16 +67,7 @@ router.get('/account-activated', async (req, res, next) => {
 router.get('/account-disable', async (req, res, next) => {
   try {
     var user = req.session.user;
-    var id_user = await PermissionModel.find({ account_disabled: 1 }, { _id: 0, id_user: 1 }).exec();
-
-    var result = [];
-
-    for (var i = 0; i < id_user.length; i++) {
-      var data = await UserModel.findOne({ _id: id_user[i].id_user, role: 1 }).sort({ created_at: -1 }).exec();
-      if (data) {
-        result.push(data);
-      }
-    }
+    var result = await UserModel.find({ activate: 2, role: 1 }).sort({ created_at: -1 }).exec();
 
     return res.render('admin/account-disable', {
       code: 0, message: 'Ok', user, result,
@@ -120,39 +79,10 @@ router.get('/account-disable', async (req, res, next) => {
   }
 });
 
-router.post('/account-disable', async (req, res, next) => {
-  try {
-    var { id, disable } = req.body;
-
-    if (typeof (disable) !== 'undefined') {
-      PermissionModel.findOneAndUpdate({ id_user: id }, { account_disabled: disable }, (error, data) => {
-        if (error) {
-          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
-          return res.redirect('/admin/account-disable');
-        }
-      })
-    }
-
-    req.flash('success', 'Cập nhật trạng thái thành công!')
-    return res.redirect('/admin/account-disable');
-  } catch (error) {
-    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
-  }
-});
-
 router.get('/account-blocked', async (req, res, next) => {
   try {
     var user = req.session.user;
-    var id_user = await PermissionModel.find({ account_blocked: 1 }, { _id: 0, id_user: 1 }).exec();
-
-    var result = [];
-
-    for (var i = 0; i < id_user.length; i++) {
-      var data = await UserModel.findOne({ _id: id_user[i].id_user, role: 1 }).sort({ created_at: -1 }).exec();
-      if (data) {
-        result.push(data);
-      }
-    }
+    var result = await UserModel.find({ activate: 3, role: 1 }).sort({ created_at: -1 }).exec();
 
     return res.render('admin/account-blocked', {
       code: 0, message: 'Ok', user, result,
@@ -163,5 +93,16 @@ router.get('/account-blocked', async (req, res, next) => {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
 });
+
+// router.get('/account/:id', async (req, res, next) => {
+//   try {
+//     var user = req.session.user;
+//     var result = await UserModel.findById(req.params.id).exec();
+
+//     return res.json({ code: 0, message: 'Ok', user, result });
+//   } catch (error) {
+//     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+//   }
+// });
 
 module.exports = router;
