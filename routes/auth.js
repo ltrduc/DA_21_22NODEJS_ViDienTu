@@ -10,6 +10,8 @@ const router = express.Router();
 
 // Import Model
 const UserModel = require('../models/user');
+const PasswordModel = require('../models/password');
+const PermissionModel = require('../models/permission');
 
 // Import Middleware
 const Auth = require('../middleware/auth');
@@ -71,6 +73,9 @@ router.post('/login', LoginValidator, async (req, res, next) => {
       return res.redirect('/auth/login');
     }
 
+    var pass = await PasswordModel.findOne({ id_user: user.id }).exec();
+    var permission = await PermissionModel.findOne({ id_user: user.id }).exec();
+
     req.session.user = {
       id: user.id,
       fullname: user.fullname,
@@ -80,9 +85,13 @@ router.post('/login', LoginValidator, async (req, res, next) => {
       address: user.address,
       balance: user.balance,
       role: user.role,
-      role: user.role,
-      activate: user.activate,
-      status: user.status,
+      activate: {
+        account_wait_activated: permission.account_wait_activated,
+        account_activated: permission.account_activated,
+        account_disabled: permission.account_disabled,
+        account_blocked: permission.account_blocked
+      },
+      status: pass.status,
     };
 
     if (req.session.user.role == 0) {
@@ -165,39 +174,46 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
       var userDir = `public/uploads/${username}`;
 
       if (!await UserModel.findOne({ username }).exec()) {
-        var user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], balance: 0});
-        if (user) {
-          var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: `${mailUser}`,
-              pass: `${mailPass}#`,
-            }
-          });
+        var create_user = await UserModel.create({ fullname, email, birthday, phone, address, username, password: hashed, id_card: [files[0].filename, files[1].filename,], });
 
-          transporter.sendMail({
-            from: `${mailUser}`,
-            to: `${email}`,
-            subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
-            html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. Đây là thông tin tài khoản của bạn:</p>
-            <b>Tên khách hàng: </b>${fullname} <br> 
-            <b>Số tài khoản: </b>${username} <br> 
-            <b>Mật khẩu: </b>${password} 
-            <p>Trân trọng ./.</p>`,
-          });
+        if (create_user) {
+          var create_password = await PasswordModel.create({ id_user: create_user.id });
+          var create_permission = await PermissionModel.create({ id_user: create_user.id });
 
-          fs.mkdir(userDir, (error) => {
-            if (error) {
-              for (let i = 0; i < files.length; i++) {
-                fs.unlinkSync(files[i].path);
+          if (create_password && create_permission) {
+            var transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                user: `${mailUser}`,
+                pass: `${mailPass}#`,
               }
-              req.flash('error', 'Không thể tạo tài khoản, vui lòng thử lại!');
-              return res.redirect('/auth/register');
-            }
-            for (let i = 0; i < files.length; i++) {
-              fs.renameSync(files[i].path, `public/uploads/${username}/${files[i].filename}`);
-            }
-          })
+            });
+
+            transporter.sendMail({
+              from: `${mailUser}`,
+              to: `${email}`,
+              subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
+              html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. 
+              Đây là thông tin tài khoản của bạn:</p>
+              <b>Tên khách hàng: </b>${fullname} <br> 
+              <b>Số tài khoản: </b>${username} <br> 
+              <b>Mật khẩu: </b>${password} 
+              <p>Trân trọng ./.</p>`,
+            });
+
+            fs.mkdir(userDir, (error) => {
+              if (error) {
+                for (let i = 0; i < files.length; i++) {
+                  fs.unlinkSync(files[i].path);
+                }
+                req.flash('error', 'Không thể tạo tài khoản, vui lòng thử lại!');
+                return res.redirect('/auth/register');
+              }
+              for (let i = 0; i < files.length; i++) {
+                fs.renameSync(files[i].path, `public/uploads/${username}/${files[i].filename}`);
+              }
+            })
+          }
         }
         req.flash('success', 1);
         return res.redirect('/auth/email');
@@ -252,39 +268,45 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
 
     var user = await UserModel.findById(req.session.user.id).exec();
 
-    UserModel.findByIdAndUpdate({ _id: user._id }, { password: bcrypt.hashSync(confirmPassword, 10), status: 1 }, (error, data) => {
+    UserModel.findByIdAndUpdate({ _id: user._id }, { password: bcrypt.hashSync(confirmPassword, 10) }, (error, data) => {
       if (error) {
         req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
         return res.redirect('/auth/password/change');
       }
-
-      UserModel.findById(user.id, (error, data) => {
-        if (error) {
-          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
-          return res.redirect('/auth/password/change');
-        }
-
-        req.session.user = {
-          id: data.id,
-          fullname: data.fullname,
-          email: data.email,
-          birthday: data.birthday,
-          phone: data.phone,
-          address: data.address,
-          balance: user.balance,
-          role: data.role,
-          role: data.role,
-          activate: data.activate,
-          status: data.status,
-        };
-
-        if (req.session.user.role == 0) {
-          return res.redirect('/admin');
-        }
-
-        res.redirect('/');
-      })
     })
+
+    PasswordModel.findOneAndUpdate({ id_user: user._id }, { status: 1 }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+        return res.redirect('/auth/password/change');
+      }
+    })
+
+    var permission = await PermissionModel.findOne({ id_user: user._id }).exec();
+    var pass = await PasswordModel.findOne({ id_user: user._id }).exec();
+
+    req.session.user = {
+      id: user.id,
+      fullname: user.fullname,
+      email: user.email,
+      birthday: user.birthday,
+      phone: user.phone,
+      address: user.address,
+      balance: user.balance,
+      role: user.role,
+      activate: {
+        account_activated: permission.account_activated,
+        account_disabled: permission.account_disabled,
+        account_blocked: permission.account_blocked
+      },
+      status: pass.status,
+    };
+
+    if (req.session.user.role == 0) {
+      return res.redirect('/admin');
+    }
+
+    res.redirect('/');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
@@ -327,34 +349,42 @@ router.post('/reset-password', ResetPasswordValidator, async (req, res, next) =>
     var password = Math.random().toString(36).slice(-6);
     var hashed = bcrypt.hashSync(password, 10);
 
-    UserModel.findByIdAndUpdate({ _id: user._id }, { password: hashed, status: 0 }, (error, data) => {
+    UserModel.findByIdAndUpdate(user.id, { password: hashed }, (error, data) => {
       if (error) {
         req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
         return res.redirect('/auth/password/change');
       }
-
-      var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: `${mailUser}`,
-          pass: `${mailPass}#`,
-        }
-      });
-
-      transporter.sendMail({
-        from: `${mailUser}`,
-        to: `${email}`,
-        subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
-        html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. Đây là thông tin tài khoản của bạn sau khi đặt lại mật khẩu:</p>
-        <b>Tên khách hàng: </b>${data.fullname} <br> 
-        <b>Số tài khoản: </b>${data.username} <br> 
-        <b>Mật khẩu: </b>${password} 
-        <p>Trân trọng ./.</p>`,
-      });
-
-      req.flash('success', 1);
-      return res.redirect('/auth/email');
     })
+
+    PasswordModel.findOneAndUpdate({ id_user: user.id }, { status: 0 }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+        return res.redirect('/auth/password/change');
+      }
+    })
+
+    var transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: `${mailUser}`,
+        pass: `${mailPass}#`,
+      }
+    });
+
+    transporter.sendMail({
+      from: `${mailUser}`,
+      to: `${email}`,
+      subject: '[TB] THÔNG TIN TÀI KHOẢN KHÁCH HÀNG - VÍ ĐIỆN TỬ OBANK',
+      html: `<p>Cảm ơn bạn đã tin dùng ví điện tử của chúng tôi, vui lòng không chia sẻ thông tin này đến bất kỳ ai. 
+      Đây là thông tin tài khoản của bạn sau khi đặt lại mật khẩu:</p>
+      <b>Tên khách hàng: </b>${user.fullname} <br> 
+      <b>Số tài khoản: </b>${user.username} <br> 
+      <b>Mật khẩu: </b>${password} 
+      <p>Trân trọng ./.</p>`,
+    });
+
+    req.flash('success', 1);
+    return res.redirect('/auth/email');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
