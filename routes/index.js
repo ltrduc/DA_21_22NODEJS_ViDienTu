@@ -178,7 +178,11 @@ router.post('/withdraw', WithdrawValidator, async function(req, res){
                 req.flash('error', 'Số tiền rút phải là bội số của 50,000 đồng.');
                 return res.redirect('/withdraw');
             }
-            if( (amount + amount*(5/100)) > req.session.user.balance){
+
+            var user = await UserModel.findById(req.session.user.id).exec();
+            var balance = Number.parseInt(user.balance);
+
+            if( (amount + amount*(5/100)) > balance){         
                 req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch rút tiền.');
                 return res.redirect('/withdraw');
             }
@@ -190,9 +194,6 @@ router.post('/withdraw', WithdrawValidator, async function(req, res){
                 req.flash('error', 'Số tiền bạn rút là trên 5 triệu đồng, vui lòng chờ ngân hàng thông qua.');
                 return res.redirect('/withdraw');
             }
-
-            var user = await UserModel.findById(req.session.user.id).exec();
-            var balance = Number.parseInt(user.balance);
 
             UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance - amount - amount*(5/100), status: 1 }, (error, data) => {
                 if (error) {
