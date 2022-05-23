@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 
 const history = new mongoose.Schema({
-    userID: String,
+    transactionID: String,
+    username: String,
     user_fullname: String,
-    recipientID: String,
+    recipient_username: String,
     recipient_fullname: String,
     transaction_type: String,
     amount: Number,
@@ -19,5 +20,5 @@ const HistoryModel = mongoose.model('history', history);
 module.exports = HistoryModel;
 
 // status:
-// - 0: đang chờ admin duyệt
-// -1: admin đã duyệt và giao dịch được thông qua
+// - Đăng chờ: đang chờ admin duyệt
+// - Thành công: giao dịch thành công hoặc admin đã duyệt và giao dịch được thông qua
