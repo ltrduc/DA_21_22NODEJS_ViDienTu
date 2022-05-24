@@ -16,7 +16,7 @@ const RechargeValidator = require('./validators/recharge');
 const WithdrawValidator = require('./validators/withdraw');
 
 router.get('/', function (req, res, next) {
-    res.json({
+    res.render('user/index', {
         user: req.session.user,
         error: req.flash('error') || '',
     });
@@ -29,7 +29,10 @@ router.get('/', function (req, res, next) {
 */
 
 router.get('/recharge', Permission.AccountActivated, function (req, res) {
-    res.render('user/recharge', { error: req.flash('error') });
+    res.render('user/recharge', {
+        user: req.session.user,
+        error: req.flash('error')
+    });
 })
 
 router.post('/recharge', Permission.AccountActivated, RechargeValidator, async function (req, res) {
@@ -92,14 +95,14 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
             })
 
             // Tạo lịch sử giao dịch tại đây
-            while(true){
+            while (true) {
                 var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
-                if (!await HistoryModel.findOne({ transactionID }).exec()){
-                    var history = await HistoryModel.create({transactionID: transactionID ,username: user.username, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công" });
+                if (!await HistoryModel.findOne({ transactionID }).exec()) {
+                    var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công" });
                     req.flash('error', 'Nạp tiền thành công!');
                     return res.redirect('/recharge');
                 }
-            }        
+            }
         }
 
         if (cardNumber == 111111) {
@@ -124,10 +127,10 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
             })
 
             // Tạo lịch sử giao dịch tại đây
-            while(true){
+            while (true) {
                 var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
-                if (!await HistoryModel.findOne({ transactionID }).exec()){
-                    var history = await HistoryModel.create({transactionID: transactionID ,username: user.username, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công" });
+                if (!await HistoryModel.findOne({ transactionID }).exec()) {
+                    var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Nạp tiền", amount: amount, status: "Thành công" });
                     req.flash('error', 'Nạp tiền thành công!');
                     return res.redirect('/recharge');
                 }
@@ -147,7 +150,10 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
 */
 
 router.get('/withdraw', Permission.AccountActivated, function (req, res) {
-    res.render('user/withdraw', { error: req.flash('error') });
+    res.render('user/withdraw', {
+        user: req.session.user,
+        error: req.flash('error')
+    });
 })
 
 router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async function (req, res) {
@@ -198,10 +204,10 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
             if (amount > 5000000) {
                 //Chờ duyệt
                 var user = await UserModel.findById(req.session.user.id).exec();
-                while(true){
+                while (true) {
                     var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
-                    if (!await HistoryModel.findOne({ transactionID }).exec()){
-                        var history = await HistoryModel.create({transactionID: transactionID ,username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Đang chờ" });
+                    if (!await HistoryModel.findOne({ transactionID }).exec()) {
+                        var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Đang chờ" });
                         req.flash('error', 'Số tiền bạn rút là trên 5 triệu đồng, vui lòng chờ ngân hàng thông qua.');
                         return res.redirect('/withdraw');
                     }
@@ -215,10 +221,10 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
                 }
             })
             // Tạo lịch sử giao dịch tại đây
-            while(true){
+            while (true) {
                 var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
-                if (!await HistoryModel.findOne({ transactionID }).exec()){
-                    var history = await HistoryModel.create({transactionID: transactionID ,username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Thành công" });
+                if (!await HistoryModel.findOne({ transactionID }).exec()) {
+                    var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Thành công" });
                     req.flash('error', 'Rút tiền thành công!');
                     return res.redirect('/withdraw');
                 }
@@ -256,7 +262,10 @@ router.get('/history', Permission.AccountActivated, async function (req, res) {
     var rechargeHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Nạp tiền" }).sort({ made_at: -1 }).exec();
     var withdrawHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
     //Các loại giao dịch khác
-    res.render('user/history', { recharge: rechargeHistory, withdraw: withdrawHistory });
+    res.render('user/history', {
+        user: req.session.user,
+        recharge: rechargeHistory, withdraw: withdrawHistory
+    });
 })
 
 module.exports = router;
