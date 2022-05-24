@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const fs = require('fs');
 const { check, validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
-const { mailUser, mailPass } = process.env;
+const { mailHost, mailUser, mailPass, mailPort } = process.env;
 
 const router = express.Router();
 
@@ -184,10 +184,15 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
 
           if (create_password && create_permission) {
             var transporter = nodemailer.createTransport({
-              service: 'gmail',
+              host: `${mailHost}`,
+              port: `${mailPort}`,
+              secure: 465,
               auth: {
                 user: `${mailUser}`,
-                pass: `${mailPass}#`,
+                pass: `${mailPass}`,
+              },
+              tls: {
+                rejectUnauthorized: false,
               }
             });
 
@@ -368,10 +373,15 @@ router.post('/reset-password', ResetPasswordValidator, async (req, res, next) =>
     })
 
     var transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: `${mailHost}`,
+      port: `${mailPort}`,
+      secure: 465,
       auth: {
         user: `${mailUser}`,
-        pass: `${mailPass}#`,
+        pass: `${mailPass}`,
+      },
+      tls: {
+        rejectUnauthorized: false,
       }
     });
 
