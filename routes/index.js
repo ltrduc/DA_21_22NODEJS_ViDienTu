@@ -1,5 +1,6 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ const Permission = require('../middleware/permission');
 // Import Validators
 const RechargeValidator = require('./validators/recharge');
 const WithdrawValidator = require('./validators/withdraw');
+const ChangePasswordValidator = require('./validators/change-password-user');
 
 /*
 |------------------------------------------------------------------------------------------------------
@@ -286,5 +288,66 @@ router.get('/history', Permission.AccountActivated, async function (req, res) {
         recharge: rechargeHistory, withdraw: withdrawHistory
     });
 })
+
+/*
+|------------------------------------------------------------------------------------------------------
+| ĐỔI MẬT KHẨU
+|------------------------------------------------------------------------------------------------------
+*/
+router.get('/change-password', function (req, res, next) {
+    res.render('user/change-password', {
+        user: req.session.user,
+        error: req.flash('error') || '',
+        success: req.flash('success') || '',
+        oldPassword: req.flash('oldPassword') || '',
+        newPassword: req.flash('newPassword') || '',
+        confirmPassword: req.flash('confirmPassword') || '',
+    });
+});
+
+router.post('/change-password', ChangePasswordValidator, async function (req, res, next) {
+    var { oldPassword, newPassword, confirmPassword } = req.body;
+    var result = validationResult(req);
+
+    req.flash('oldPassword', oldPassword);
+    req.flash('newPassword', newPassword);
+    req.flash('confirmPassword', confirmPassword);
+
+    if (result.errors.length !== 0) {
+        result = result.mapped();
+        for (fields in result) {
+            req.flash('error', result[fields].msg);
+            return res.redirect('/change-password');
+        }
+    }
+
+    var user = await UserModel.findById(req.session.user.id).exec();
+    if (!user) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!');
+        return res.redirect('/change-password');
+    }
+
+    var matched = bcrypt.compareSync(oldPassword, user.password)
+    if (!matched) {
+        req.flash('error', 'Mật khẩu cũ không đúng!');
+        return res.redirect('/change-password');
+    }
+
+    if (newPassword !== confirmPassword) {
+        req.flash('error', 'Mật khẩu xác nhận không trùng khớp!')
+        return res.redirect('/change-password');
+    }
+
+    var hashed = bcrypt.hashSync(newPassword, 10);
+    UserModel.findByIdAndUpdate(user.id, { password: hashed }, (error, data) => {
+        if (error) {
+            req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!');
+            return res.redirect('/change-password');
+        }
+    })
+
+    req.flash('success', "Cập nhật mật khẩu thành công!");
+    res.redirect('/change-password');
+});
 
 module.exports = router;
