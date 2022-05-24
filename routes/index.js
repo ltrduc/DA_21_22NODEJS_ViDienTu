@@ -15,8 +15,27 @@ const Permission = require('../middleware/permission');
 const RechargeValidator = require('./validators/recharge');
 const WithdrawValidator = require('./validators/withdraw');
 
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TỔNG QUAN
+|------------------------------------------------------------------------------------------------------
+*/
+
 router.get('/', function (req, res, next) {
     res.render('user/index', {
+        user: req.session.user,
+        error: req.flash('error') || '',
+    });
+});
+
+/*
+|------------------------------------------------------------------------------------------------------
+| THÔNG TIN TÀI KHOẢN
+|------------------------------------------------------------------------------------------------------
+*/
+
+router.get('/profile', function (req, res, next) {
+    res.render('user/profile', {
         user: req.session.user,
         error: req.flash('error') || '',
     });

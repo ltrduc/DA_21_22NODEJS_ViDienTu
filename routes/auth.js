@@ -79,6 +79,7 @@ router.post('/login', LoginValidator, async (req, res, next) => {
     req.session.user = {
       id: user.id,
       fullname: user.fullname,
+      username: user.username,
       email: user.email,
       birthday: user.birthday,
       phone: user.phone,
@@ -92,6 +93,7 @@ router.post('/login', LoginValidator, async (req, res, next) => {
         account_blocked: permission.account_blocked
       },
       status: pass.status,
+      id_card: user.id_card,
     };
 
     if (req.session.user.role == 0) {
@@ -288,6 +290,7 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
     req.session.user = {
       id: user.id,
       fullname: user.fullname,
+      username: user.username,
       email: user.email,
       birthday: user.birthday,
       phone: user.phone,
@@ -300,6 +303,7 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
         account_blocked: permission.account_blocked
       },
       status: pass.status,
+      id_card: user.id_card,
     };
 
     if (req.session.user.role == 0) {
