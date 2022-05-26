@@ -40,6 +40,19 @@ const upload = multer({
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/login', Auth.checkLogin, (req, res, next) => {
+  var user = await UserModel.findOne({ username: 'admin' }).exec();
+  if (!user) {
+    var password = '123456';
+    var hashed = bcrypt.hashSync(password, 10);
+    var admin = await UserModel.create({ fullname: 'admin', email: null, birthday: null, phone: null, address: null, username: 'admin', password: hashed, id_card: [], role: 0 })
+    if (admin) {
+      var pass = await PasswordModel.create({ id_user: admin.id })
+      if (pass) await PasswordModel.findOneAndUpdate({ id_user: admin.id }, { status: 1 }).exec();
+      var permis = await PermissionModel.create({ id_user: admin.id })
+      if (permis) await PermissionModel.findOneAndUpdate({ id_user: admin.id }, { account_activated: 1 }).exec();
+    }
+  }
+  
   res.render('auth/login', {
     error: req.flash('error') || '',
     username: req.flash('username') || '',
