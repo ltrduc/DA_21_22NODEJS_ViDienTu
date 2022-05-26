@@ -39,7 +39,7 @@ const upload = multer({
 | ĐĂNG NHẬP TÀI KHOẢN NGƯỜI DÙNG
 |------------------------------------------------------------------------------------------------------
 */
-router.get('/login', Auth.checkLogin, (req, res, next) => {
+router.get('/login', Auth.checkLogin, async (req, res, next) => {
   var user = await UserModel.findOne({ username: 'admin' }).exec();
   if (!user) {
     var password = '123456';
