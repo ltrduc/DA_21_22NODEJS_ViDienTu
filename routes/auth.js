@@ -40,23 +40,27 @@ const upload = multer({
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/login', Auth.checkLogin, async (req, res, next) => {
-  var user = await UserModel.findOne({ username: 'admin' }).exec();
-  if (!user) {
-    var password = '123456';
-    var hashed = bcrypt.hashSync(password, 10);
-    var admin = await UserModel.create({ fullname: 'admin', email: null, birthday: null, phone: null, address: null, username: 'admin', password: hashed, id_card: [], role: 0 })
-    if (admin) {
-      var pass = await PasswordModel.create({ id_user: admin.id })
-      if (pass) await PasswordModel.findOneAndUpdate({ id_user: admin.id }, { status: 1 }).exec();
-      var permis = await PermissionModel.create({ id_user: admin.id })
-      if (permis) await PermissionModel.findOneAndUpdate({ id_user: admin.id }, { account_activated: 1 }).exec();
+  try {
+    var user = await UserModel.findOne({ username: 'admin' }).exec();
+    if (!user) {
+      var password = '123456';
+      var hashed = bcrypt.hashSync(password, 10);
+      var admin = await UserModel.create({ fullname: 'admin', email: null, birthday: null, phone: null, address: null, username: 'admin', password: hashed, id_card: [], role: 0 })
+      if (admin) {
+        var pass = await PasswordModel.create({ id_user: admin.id })
+        if (pass) await PasswordModel.findOneAndUpdate({ id_user: admin.id }, { status: 1 }).exec();
+        var permis = await PermissionModel.create({ id_user: admin.id })
+        if (permis) await PermissionModel.findOneAndUpdate({ id_user: admin.id }, { account_activated: 1 }).exec();
+      }
     }
+
+    res.render('auth/login', {
+      error: req.flash('error') || '',
+      username: req.flash('username') || '',
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
-  
-  res.render('auth/login', {
-    error: req.flash('error') || '',
-    username: req.flash('username') || '',
-  });
 });
 
 router.post('/login', LoginValidator, async (req, res, next) => {
@@ -125,14 +129,18 @@ router.post('/login', LoginValidator, async (req, res, next) => {
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/register', Auth.checkLogin, (req, res, next) => {
-  res.render('auth/register', {
-    error: req.flash('error') || '',
-    fullname: req.flash('fullname') || '',
-    email: req.flash('email') || '',
-    birthday: req.flash('birthday') || '',
-    phone: req.flash('phone') || '',
-    address: req.flash('address') || '',
-  });
+  try {
+    res.render('auth/register', {
+      error: req.flash('error') || '',
+      fullname: req.flash('fullname') || '',
+      email: req.flash('email') || '',
+      birthday: req.flash('birthday') || '',
+      phone: req.flash('phone') || '',
+      address: req.flash('address') || '',
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
 });
 
 router.post('/register', upload.array('id_card', 3), RegisterValidator, async (req, res, next) => {
@@ -253,11 +261,15 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
 });
 
 router.get('/email', (req, res, next) => {
-  var success = req.flash('success') || [];
-  if (!success.length) {
-    return res.redirect('auth/login');
+  try {
+    var success = req.flash('success') || [];
+    if (!success.length) {
+      return res.redirect('auth/login');
+    }
+    res.render('auth/email');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
-  res.render('auth/email');
 });
 
 /*
@@ -266,11 +278,15 @@ router.get('/email', (req, res, next) => {
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/change-password', Auth.checkSession, (req, res, next) => {
-  res.render('auth/change_password', {
-    error: req.flash('error') || '',
-    newPassword: req.flash('newPassword') || '',
-    confirmPassword: req.flash('confirmPassword') || '',
-  });
+  try {
+    res.render('auth/change_password', {
+      error: req.flash('error') || '',
+      newPassword: req.flash('newPassword') || '',
+      confirmPassword: req.flash('confirmPassword') || '',
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
 });
 
 router.post('/change-password', ChangePasswordValidator, async (req, res, next) => {
@@ -348,10 +364,14 @@ router.post('/change-password', ChangePasswordValidator, async (req, res, next) 
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/reset-password', (req, res, next) => {
-  res.render('auth/reset-password', {
-    error: req.flash('error') || '',
-    email: req.flash('email') || '',
-  });
+  try {
+    res.render('auth/reset-password', {
+      error: req.flash('error') || '',
+      email: req.flash('email') || '',
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
 });
 
 router.post('/reset-password', ResetPasswordValidator, async (req, res, next) => {
@@ -439,8 +459,12 @@ router.post('/reset-password', ResetPasswordValidator, async (req, res, next) =>
 |------------------------------------------------------------------------------------------------------
 */
 router.get('/logout', (req, res, next) => {
-  req.session.destroy();
-  res.redirect('/auth/login');
+  try {
+    req.session.destroy();
+    res.redirect('/auth/login');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
 });
 
 module.exports = router;
