@@ -25,9 +25,11 @@
                 <p style="font-size: 13px; font-weight: bold;">Trạng thái tài khoản:
                   <span style="color: brown;">
                     <% if(user.activate.account_activated == 0 && user.id_card.length == 2) {%>
-                      Chờ kích hoạt
+                      Chờ kích hoạt!
                     <%} else if (user.activate.account_activated == 0 && user.id_card.length < 2) { %>
-                      Chờ cập nhật
+                      Chờ cập nhật!
+                    <% } else { %>
+                      <span style="color: green;">Đã kích hoạt!</span>
                     <% }%>
                   </span>
                 </p>
