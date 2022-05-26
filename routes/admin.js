@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const router = express.Router();
 
 // Import Model
@@ -46,18 +47,31 @@ router.post('/account-wait-activated', async (req, res, next) => {
     var { id, activate, disable } = req.body;
 
     if (activate < 2) {
-      PermissionModel.findOneAndUpdate({ id_user: id }, { account_activated: activate }, (error, data) => {
-        console.log(activate);
-        if (error) {
-          req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
-          return res.redirect('/admin/account-wait-activated');
-        }
-      })
+      if (activate == 1) {
+        PermissionModel.findOneAndUpdate({ id_user: id }, { account_activated: activate }, (error, data) => {
+          if (error) {
+            req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+            return res.redirect('/admin/account-wait-activated');
+          }
+        })
+      }
+      if (activate == 0) {
+        UserModel.findOneAndUpdate({ _id: id }, { id_card: [] }, (error, data) => {
+          if (error) {
+            req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
+            return res.redirect('/admin/account-wait-activated');
+          }
+          for (let i = 0; i < data.id_card.length; i++) {
+            if (fs.existsSync(`public/uploads/${data.username}/${data.id_card[i]}`)) {
+              fs.unlinkSync(`public/uploads/${data.username}/${data.id_card[i]}`);
+            }
+          }
+        })
+      }
     }
 
     if (typeof (disable) !== 'undefined') {
       PermissionModel.findOneAndUpdate({ id_user: id }, { account_disabled: disable }, (error, data) => {
-        console.log(activate);
         if (error) {
           req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
           return res.redirect('/admin/account-wait-activated');
