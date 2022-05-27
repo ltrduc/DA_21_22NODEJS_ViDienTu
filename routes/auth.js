@@ -93,6 +93,11 @@ router.post('/login', LoginValidator, async (req, res, next) => {
     var pass = await PasswordModel.findOne({ id_user: user.id }).exec();
     var permission = await PermissionModel.findOne({ id_user: user.id }).exec();
 
+    if (permission && permission.account_disabled == 1) {
+      req.flash('error', 'Tài khoản này đã bị vô hiệu hóa, vui lòng liên hệ tổng đài 18001008!');
+      return res.redirect('/auth/login');
+    }
+    
     req.session.user = {
       id: user.id,
       fullname: user.fullname,

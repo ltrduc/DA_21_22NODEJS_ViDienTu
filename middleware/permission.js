@@ -19,18 +19,3 @@ module.exports.AccountActivated = (req, res, next) => {
     }
     next();
 }
-
-// module.exports.AccountDisabled = (req, res, next) => {
-//     if (req.session.user.activate.account_disabled == 1) {
-//         req.flash('error', 'Tài khoản này đã bị vô hiệu hóa, vui lòng liên hệ tổng đài 18001008!');
-//         return res.redirect('/auth/logout');
-//     }
-//     next();
-// }
-
-// module.exports.AccountBlocked = (req, res, next) => {
-//     if (req.session.user.activate.account_blocked == 0) {
-//         return res.redirect('/');
-//     }
-//     next();
-// }
