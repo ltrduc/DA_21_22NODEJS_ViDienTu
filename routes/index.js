@@ -93,6 +93,9 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
 
     var accpectedCard = [111111, 222222, 333333];
 
+    var user = await UserModel.findById(req.session.user.id).exec();
+    var balance = Number.parseInt(user.balance);
+
     if (result.errors.length !== 0) {
       result = result.mapped();
       for (fields in result) {
@@ -133,9 +136,6 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
         return res.redirect('/recharge');
       }
 
-      var user = await UserModel.findById(req.session.user.id).exec();
-      var balance = Number.parseInt(user.balance);
-
       UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance + amount, status: 1 }, (error, data) => {
         if (error) {
           req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!')
@@ -163,9 +163,6 @@ router.post('/recharge', Permission.AccountActivated, RechargeValidator, async f
         req.flash('error', 'Mã CVV không chính xác.');
         return res.redirect('/recharge');
       }
-
-      var user = await UserModel.findById(req.session.user.id).exec();
-      var balance = Number.parseInt(user.balance);
 
       UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance + amount, status: 1 }, (error, data) => {
         if (error) {
@@ -215,6 +212,10 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
     var { cardNumber, expDate, cvv, amount, desc } = req.body;
     cardNumber = Number.parseInt(cardNumber);
     amount = Number.parseInt(amount);
+
+    var user = await UserModel.findById(req.session.user.id).exec();
+    var balance = Number.parseInt(user.balance);
+
     if (!desc) { desc = "" }
 
     if (result.errors.length !== 0) {
@@ -239,16 +240,31 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
         req.flash('error', 'Ngày hết hạn không chính xác.');
         return res.redirect('/withdraw');
       }
-      // if("?"){
-      //     //Rút 2 lần mỗi ngày
-      // }
+
+  
+      var start = new Date()
+      var end = new Date() 
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+
+      var count = await HistoryModel.countDocuments({ 
+        username: user.username, 
+        transaction_type: 'Rút tiền', 
+        made_at: {
+          $gt: start,
+          $lt: end
+        }
+      }).exec();   //Đếm số lần thực hiện giao dịch trong ngày
+
+      if(count >= 2){
+        req.flash('error', 'Bạn chỉ được phép rút tiền 2 lần trong một ngày.');
+        return res.redirect('/withdraw');
+      }
+
       if (!(amount % 50000 == 0)) {
         req.flash('error', 'Số tiền rút phải là bội số của 50,000 đồng.');
         return res.redirect('/withdraw');
       }
-
-      var user = await UserModel.findById(req.session.user.id).exec();
-      var balance = Number.parseInt(user.balance);
 
       if ((amount + amount * (5 / 100)) > balance) {
         req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch rút tiền.');
@@ -256,11 +272,10 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
       }
       if (amount > 5000000) {
         //Chờ duyệt
-        var user = await UserModel.findById(req.session.user.id).exec();
         while (true) {
           var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
           if (!await HistoryModel.findOne({ transactionID }).exec()) {
-            var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Đang chờ" });
+            var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Đang chờ", transaction_allowed: 0 });
             req.flash('error', 'Số tiền bạn rút là trên 5 triệu đồng, vui lòng chờ ngân hàng thông qua.');
             return res.redirect('/withdraw');
           }
