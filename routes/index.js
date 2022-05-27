@@ -1,12 +1,16 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const fs = require('fs');
 
 const router = express.Router();
 
 // Import Model
 const UserModel = require('../models/user');
 const HistoryModel = require('../models/history');
+const PasswordModel = require('../models/password');
+const PermissionModel = require('../models/permission');
 
 // Import Middleware
 const Auth = require('../middleware/auth');
@@ -16,6 +20,18 @@ const Permission = require('../middleware/permission');
 const RechargeValidator = require('./validators/recharge');
 const WithdrawValidator = require('./validators/withdraw');
 const ChangePasswordValidator = require('./validators/change-password-user');
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'public/uploads/images');
+    },
+    filename: function (req, file, cb) {
+      const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, filename + '-' + file.originalname);
+    }
+  })
+});
 
 /*
 |------------------------------------------------------------------------------------------------------
@@ -288,7 +304,90 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
 |------------------------------------------------------------------------------------------------------
 */
 
+/*
+|------------------------------------------------------------------------------------------------------
+| BỔ SUNG CMND/CCCD
+|------------------------------------------------------------------------------------------------------
+*/
 
+router.get('/additional-identity-card', async function (req, res) {
+  try {
+    res.render('user/additional-identity-card', {
+      user: req.session.user,
+      error: req.flash('error') || '',
+      success: req.flash('success') || '',
+    })
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+router.post('/additional-identity-card', upload.array('id_card', 3), async function (req, res) {
+  try {
+    var files = req.files;
+
+    if (!files || files.length < 2) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', 'Vui lòng cập nhật lại CMND/CCCD!');
+      return res.redirect('/additional-identity-card');
+    }
+
+    var checkIdCard = await UserModel.findById(req.session.user.id).exec();
+    if (checkIdCard.id_card.length == 2) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', 'Bạn đã bổ sung thông tin, vui lòng chờ xác minh!');
+      return res.redirect('/additional-identity-card');
+    }
+
+    var updateIdCard = await UserModel.findByIdAndUpdate(req.session.user.id, { id_card: [files[0].filename, files[1].filename,] }).exec();
+    if (!updateIdCard) {
+      for (let i = 0; i < files.length; i++) {
+        fs.unlinkSync(files[i].path);
+      }
+      req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!');
+      return res.redirect('/additional-identity-card');
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      fs.renameSync(files[i].path, `public/uploads/${req.session.user.username}/${files[i].filename}`);
+    }
+
+    var user = await UserModel.findById(req.session.user.id).exec();
+    if (user) {
+      var pass = await PasswordModel.findOne({ id_user: user.id }).exec();
+      var permission = await PermissionModel.findOne({ id_user: user.id }).exec();
+
+      req.session.user = {
+        id: user.id,
+        fullname: user.fullname,
+        username: user.username,
+        email: user.email,
+        birthday: user.birthday,
+        phone: user.phone,
+        address: user.address,
+        balance: user.balance,
+        role: user.role,
+        activate: {
+          account_wait_activated: permission.account_wait_activated,
+          account_activated: permission.account_activated,
+          account_disabled: permission.account_disabled,
+          account_blocked: permission.account_blocked
+        },
+        status: pass.status,
+        id_card: user.id_card,
+      };
+    }
+
+    req.flash('success', "Cập nhật mật khẩu thành công!");
+    res.redirect('/');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
 
 /*
 |------------------------------------------------------------------------------------------------------
