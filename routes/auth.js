@@ -45,7 +45,7 @@ router.get('/login', Auth.checkLogin, async (req, res, next) => {
     if (!user) {
       var password = '123456';
       var hashed = bcrypt.hashSync(password, 10);
-      var admin = await UserModel.create({ fullname: 'admin', email: null, birthday: null, phone: null, address: null, username: 'admin', password: hashed, id_card: [], role: 0 })
+      var admin = await UserModel.create({ fullname: 'Quản trị viên', email: null, birthday: null, phone: null, address: null, username: 'admin', password: hashed, id_card: [], role: 0 })
       if (admin) {
         var pass = await PasswordModel.create({ id_user: admin.id })
         if (pass) await PasswordModel.findOneAndUpdate({ id_user: admin.id }, { status: 1 }).exec();
