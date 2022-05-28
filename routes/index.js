@@ -428,6 +428,7 @@ router.get('/history', Permission.AccountActivated, async function (req, res) {
     //Các loại giao dịch khác
     res.render('user/history', {
       user: req.session.user,
+      error: req.flash('error') || '',
       recharge: rechargeHistory, withdraw: withdrawHistory
     });
   } catch (error) {
