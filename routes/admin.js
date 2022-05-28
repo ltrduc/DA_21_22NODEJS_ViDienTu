@@ -5,6 +5,7 @@ const router = express.Router();
 // Import Model
 const UserModel = require('../models/user');
 const PermissionModel = require('../models/permission');
+const PasswordModel = require('../models/password');
 
 router.get('/', async (req, res, next) => {
   try {
@@ -173,6 +174,20 @@ router.get('/account-blocked', async (req, res, next) => {
       error: req.flash('error') || '',
       success: req.flash('success') || '',
     });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+});
+
+router.post('/account-blocked', async (req, res, next) => {
+  try {
+    var { id, block } = req.body;
+
+    await PasswordModel.findOneAndUpdate({ id_user: id }, { error: 0 }).exec();
+    await PermissionModel.findOneAndUpdate({ id_user: id }, { account_blocked: block }).exec();
+
+    req.flash('success', 'Cập nhật trạng thái thành công!')
+    return res.redirect('/admin/account-blocked');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
