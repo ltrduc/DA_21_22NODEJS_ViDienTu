@@ -25,83 +25,106 @@
             </div>
             <!-- [ breadcrumb ] end -->
             <!-- [ Main Content ] start -->
-            <div class="authentication-theme auth-style_1 pt-5">
-              <div class="row">
-                <div class="col-12 logo-section mb-4">
-                  <a href="#" class="logo">
-                    <img src="/assets/images/logo.png" alt="logo" />
-                  </a>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xl-12">
-                  <div class="card">
-                    <div class="card-header">
-                      <h5>Lịch sử nạp tiền</h5>
-                    </div>
-                    <div class="card-body table-border-style">
-                      <div class="table-responsive">
-                        <table class="table table-striped">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Họ và tên</th>
-                              <th>Số tiền</th>
-                              <th>Trạng thái</th>
-                              <th>Thời gian thực hiện giao dịch</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <% recharge.forEach((field, index) => { %>
-                              <tr>
-                                <td><%= ++index; %></td>
-                                <td><%= field.user_fullname; %></td>
-                                <td><%= field.amount; %></td>
-                                <td><%= field.status; %></td>
-                                <td><%= field.made_at; %></td>
-                              </tr>
-                            <% }) %>
-                          </tbody>
-                        </table>
+            <div class="col-sm-12">
+              <h5 class="mb-3">Basic Pills</h5>
+              <div class="card">
+                <div class="card-body">
+                  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link active" id="pills-recharge-tab" data-toggle="pill" href="#pills-recharge" role="tab" aria-controls="pills-recharge" aria-selected="true">Lịch sử nạp tiền</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" id="pills-withdraw-tab" data-toggle="pill" href="#pills-withdraw" role="tab" aria-controls="pills-withdraw" aria-selected="false">Lịch sử rút tiền</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" id="pills-transfers-tab" data-toggle="pill" href="#pills-transfers" role="tab" aria-controls="pills-transfers" aria-selected="false">Lịch sử chuyển tiền</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" id="pills-pay-tab" data-toggle="pill" href="#pills-pay" role="tab" aria-controls="pills-pay" aria-selected="false">Lịch sử thanh toán</a>
+                    </li>
+                  </ul>
+                  <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-recharge" role="tabpanel" aria-labelledby="pills-recharge-tab">
+                      <!-- code here -->
+                      <div class="card">
+                        <div class="card-header">
+                          <h5>Lịch sử nạp tiền</h5>
+                        </div>
+                        <div class="card-body table-border-style">
+                          <div class="table-responsive">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Họ và tên</th>
+                                  <th>Số tiền</th>
+                                  <th>Trạng thái</th>
+                                  <th>Thời gian thực hiện giao dịch</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% recharge.forEach((field, index) => { %>
+                                  <tr>
+                                    <td><%= ++index; %></td>
+                                    <td><%= field.user_fullname; %></td>
+                                    <td><%= field.amount; %></td>
+                                    <td><%= field.status; %></td>
+                                    <td><%= field.made_at; %></td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="card">
-                    <div class="card-header">
-                      <h5>Lịch sử rút tiền</h5>
-                    </div>
-                    <div class="card-body table-border-style">
-                      <div class="table-responsive">
-                        <table class="table table-striped">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Họ và tên</th>
-                              <th>Số tiền</th>
-                              <th>Phí giao dịch</th>
-                              <th>Trạng thái</th>
-                              <th>Thời gian thực hiện giao dịch</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <% withdraw.forEach((field, index) => { %>
-                              <tr>
-                                <td><%= ++index; %></td>
-                                <td><%= field.user_fullname; %></td>
-                                <td><%= field.amount; %></td>
-                                <td><%= field.fee; %></td>
-                                <td><%= field.status; %></td>
-                                <td><%= field.made_at; %></td>
-                              </tr>
-                            <% }) %>
-                          </tbody>
-                        </table>
+                    <div class="tab-pane fade" id="pills-withdraw" role="tabpanel" aria-labelledby="pills-withdraw-tab">
+                      <div class="card">
+                        <div class="card-header">
+                          <h5>Lịch sử rút tiền</h5>
+                        </div>
+                        <div class="card-body table-border-style">
+                          <div class="table-responsive">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Họ và tên</th>
+                                  <th>Số tiền</th>
+                                  <th>Phí giao dịch</th>
+                                  <th>Trạng thái</th>
+                                  <th>Thời gian thực hiện giao dịch</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% withdraw.forEach((field, index) => { %>
+                                  <tr>
+                                    <td><%= ++index; %></td>
+                                    <td><%= field.user_fullname; %></td>
+                                    <td><%= field.amount; %></td>
+                                    <td><%= field.fee; %></td>
+                                    <td><%= field.status; %></td>
+                                    <td><%= field.made_at; %></td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                    <div class="tab-pane fade" id="pills-transfers" role="tabpanel" aria-labelledby="pills-transfers-tab">
+                      <!-- giao diện lịch sử chuyển tiền -->
+                    </div>
+                    <div class="tab-pane fade" id="pills-pay" role="tabpanel" aria-labelledby="pills-pay-tab">
+                       <!-- giao diện lịch sử thanh toán -->
+                    </div>
                   </div>
+                 
                 </div>
               </div>
             </div>
+            
             <!-- [ Main Content ] end -->
           </div>
         </div>
@@ -109,3 +132,4 @@
     </div>
   </div>
 </div>
+<%- include('./partials/footer'); -%>
