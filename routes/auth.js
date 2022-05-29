@@ -94,12 +94,14 @@ router.post('/login', LoginValidator, async (req, res, next) => {
           req.flash('error', 'Tài khoản đã bị khóa do nhập sai mật khẩu nhiều lần, vui lòng liên hệ quản trị viên để được hỗ trợ!');
           return res.redirect('/auth/login');
         }
+
         if (pass.error == 3) {
           if (((new Date()) - pass.time_be_unblocked) >= 100000) {
             await PasswordModel.findOneAndUpdate({ id_user: user.id }, { error: (pass.error + 1), time_be_unblocked: new Date() }).exec();
             req.flash('error', 'Số tài khoản hoặc mật khẩu không tồn tại!');
             return res.redirect('/auth/login');
           }
+          
           req.flash('error', 'Tài khoản hiện đang bị tạm khóa, vui lòng thử lại sau 1 phút!');
           return res.redirect('/auth/login');
         }
@@ -113,22 +115,22 @@ router.post('/login', LoginValidator, async (req, res, next) => {
     var permission = await PermissionModel.findOne({ id_user: user.id }).exec();
 
     if (user.role == 1) {
-      if (pass.error == 3 && ((new Date()) - pass.time_be_unblocked) < 150000) {
-        req.flash('error', 'Tài khoản hiện đang bị tạm khóa, vui lòng thử lại sau 1 phút!');
+      if (permission && permission.account_blocked == 1) {
+        req.flash('error', 'Tài khoản đã bị khóa do nhập sai mật khẩu nhiều lần, vui lòng liên hệ quản trị viên để được hỗ trợ!');
         return res.redirect('/auth/login');
       }
-
-      await PasswordModel.findOneAndUpdate({ id_user: user.id }, { error: 0 }).exec();
 
       if (permission && permission.account_disabled == 1) {
         req.flash('error', 'Tài khoản này đã bị vô hiệu hóa, vui lòng liên hệ tổng đài 18001008!');
         return res.redirect('/auth/login');
       }
 
-      if (permission && permission.account_blocked == 1) {
-        req.flash('error', 'Tài khoản đã bị khóa do nhập sai mật khẩu nhiều lần, vui lòng liên hệ quản trị viên để được hỗ trợ!');
+      if (pass.error == 3 && ((new Date()) - pass.time_be_unblocked) < 100000) {
+        req.flash('error', 'Tài khoản hiện đang bị tạm khóa, vui lòng thử lại sau 1 phút!');
         return res.redirect('/auth/login');
       }
+
+      await PasswordModel.findOneAndUpdate({ id_user: user.id }, { error: 0 }).exec();
     }
 
     req.session.user = {
