@@ -211,7 +211,13 @@ router.get('/withdraw', Permission.AccountActivated, function (req, res) {
   try {
     res.render('user/withdraw', {
       user: req.session.user,
-      error: req.flash('error')
+      error: req.flash('error'),
+      success: req.flash('success') || '',
+      cardNumber: req.flash('cardNumber') || '',
+      expDate: req.flash('expDate') || '',
+      cvv: req.flash('cvv') || '',
+      amount: req.flash('amount') || '',
+      desc: req.flash('desc') || '',
     });
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
@@ -224,6 +230,12 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
     var { cardNumber, expDate, cvv, amount, desc } = req.body;
     cardNumber = Number.parseInt(cardNumber);
     amount = Number.parseInt(amount);
+
+    req.flash('cardNumber', cardNumber);
+    req.flash('expDate', expDate);
+    req.flash('cvv', cvv);
+    req.flash('amount', amount);
+    req.flash('desc', desc);
 
     var user = await UserModel.findById(req.session.user.id).exec();
     var balance = Number.parseInt(user.balance);
@@ -253,22 +265,15 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
         return res.redirect('/withdraw');
       }
 
-  
       var start = new Date()
-      var end = new Date() 
+      var end = new Date()
       start.setHours(0, 0, 0, 0)
       end.setHours(23, 59, 59, 999)
 
-      var count = await HistoryModel.countDocuments({ 
-        username: user.username, 
-        transaction_type: 'Rút tiền', 
-        made_at: {
-          $gt: start,
-          $lt: end
-        }
-      }).exec();   //Đếm số lần thực hiện giao dịch trong ngày
+      //Đếm số lần thực hiện giao dịch trong ngày
+      var count = await HistoryModel.countDocuments({ username: user.username, transaction_type: 'Rút tiền', made_at: { $gt: start, $lt: end } }).exec();
 
-      if(count >= 2){
+      if (count >= 2) {
         req.flash('error', 'Bạn chỉ được phép rút tiền 2 lần trong một ngày.');
         return res.redirect('/withdraw');
       }
@@ -282,6 +287,7 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
         req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch rút tiền.');
         return res.redirect('/withdraw');
       }
+
       if (amount > 5000000) {
         //Chờ duyệt
         while (true) {
@@ -299,13 +305,15 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
           req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
           return res.redirect('/withdraw');
         }
+        req.session.user.balance = data.balance - amount - amount * (5 / 100);
       })
+
       // Tạo lịch sử giao dịch tại đây
       while (true) {
         var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
         if (!await HistoryModel.findOne({ transactionID }).exec()) {
           var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Rút tiền", amount: amount, fee: amount * (5 / 100), message: desc, status: "Thành công" });
-          req.flash('error', 'Rút tiền thành công!');
+          req.flash('success', 'Rút tiền thành công!');
           return res.redirect('/withdraw');
         }
       }
