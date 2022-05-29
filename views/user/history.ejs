@@ -117,7 +117,49 @@
                       <!-- giao diện lịch sử chuyển tiền -->
                     </div>
                     <div class="tab-pane fade" id="pills-pay" role="tabpanel" aria-labelledby="pills-pay-tab">
-                       <!-- giao diện lịch sử thanh toán -->
+                       <div class="card">
+                        <div class="card-header">
+                          <h5>Lịch sử rút tiền</h5>
+                        </div>
+                        <div class="card-body table-border-style">
+                          <div class="table-responsive">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Họ và tên</th>
+                                  <th>Nhà mạng</th>
+                                  <th>Mệnh giá</th>
+                                  <th>Số lượng thẻ</th>
+                                  <th>Tổng giá</th>
+                                  <th>Mã thẻ</th>
+                                  <th>Thời gian thực hiện giao dịch</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% phonecard.forEach((field, index) => { %>
+                                  <tr>
+                                    <td><%= ++index; %></td>
+                                    <td><%= field.user_fullname; %></td>
+                                    <td><%= field.operator; %></td>
+                                    <td><%= field.phonecard_amount; %></td>
+                                    <td><%= field.phonecard_number; %></td>
+                                    <td><%= field.phonecard_amount * field.phonecard_number; %></td>
+                                    <td>
+                                      <ul>
+                                        <% field.phonecardNumber.forEach(num => { %>
+                                            <li> <%= num %> </li>
+                                        <% }) %>                                   
+                                      </ul>
+                                    </td>
+                                    <td><%= field.made_at; %></td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                  
