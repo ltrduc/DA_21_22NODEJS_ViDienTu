@@ -6,6 +6,13 @@ const router = express.Router();
 const UserModel = require('../models/user');
 const PermissionModel = require('../models/permission');
 const PasswordModel = require('../models/password');
+const HistoryModel = require('../models/history');
+
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TỔNG QUAN
+|------------------------------------------------------------------------------------------------------
+*/
 
 router.get('/', async (req, res, next) => {
   try {
@@ -18,6 +25,12 @@ router.get('/', async (req, res, next) => {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
 });
+
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TÀI KHOẢN CHỜ KÍCH HOẠT
+|------------------------------------------------------------------------------------------------------
+*/
 
 router.get('/account-wait-activated', async (req, res, next) => {
   try {
@@ -87,6 +100,12 @@ router.post('/account-wait-activated', async (req, res, next) => {
   }
 });
 
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TÀI KHOẢN ĐÃ KÍCH HOẠT
+|------------------------------------------------------------------------------------------------------
+*/
+
 router.get('/account-activated', async (req, res, next) => {
   try {
     var user = req.session.user;
@@ -110,6 +129,12 @@ router.get('/account-activated', async (req, res, next) => {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }
 });
+
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TÀI KHOẢN BỊ VÔ HIỆU HÓA
+|------------------------------------------------------------------------------------------------------
+*/
 
 router.get('/account-disable', async (req, res, next) => {
   try {
@@ -155,6 +180,12 @@ router.post('/account-disable', async (req, res, next) => {
   }
 });
 
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG TÀI KHOẢN ĐÃ BỊ KHÓA
+|------------------------------------------------------------------------------------------------------
+*/
+
 router.get('/account-blocked', async (req, res, next) => {
   try {
     var user = req.session.user;
@@ -188,6 +219,61 @@ router.post('/account-blocked', async (req, res, next) => {
 
     req.flash('success', 'Cập nhật trạng thái thành công!')
     return res.redirect('/admin/account-blocked');
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+});
+
+/*
+|------------------------------------------------------------------------------------------------------
+| TRANG PHÊ DUYỆT LỊCH SỬ GIAO DỊCH
+|------------------------------------------------------------------------------------------------------
+*/
+
+router.get('/transaction-approval', async function (req, res) {
+  try {
+    var result = await HistoryModel.find({ transaction_type: "Rút tiền", transaction_allowed: 0 }).sort({ made_at: -1 }).exec();
+
+    res.render('admin/transaction-approval', {
+      user: req.session.user,
+      error: req.flash('error') || '',
+      success: req.flash('success') || '',
+      result,
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+router.post('/transaction-approval', async (req, res, next) => {
+  try {
+    var { id, transaction } = req.body;
+
+    var transactionHistory = await HistoryModel.findById(id).exec();
+    var transactionUser = await UserModel.findOne({ username: transactionHistory.username }).exec();
+
+    if (transaction == 0) {
+      await HistoryModel.findByIdAndUpdate(id, { transaction_allowed: 1, status: 'Thất bại' }).exec();
+      req.flash('success', 'Từ chối phê duyệt thành công!');
+      return res.redirect('/admin/transaction-approval');
+    }
+
+    if (transactionHistory.amount + transactionHistory.fee > transactionUser.balance) {
+      await HistoryModel.findByIdAndUpdate(id, { transaction_allowed: 1, status: 'Thất bại' }).exec();
+      req.flash('error', 'Phê duyệt không thành công do số dư người dùng không đủ!');
+      return res.redirect('/admin/transaction-approval');
+    }
+
+    var updateHistory = await HistoryModel.findByIdAndUpdate(id, { transaction_allowed: 1, status: 'Thành công' }).exec();
+    if (!updateHistory) {
+      req.flash('error', 'Lỗi trong quá trình phê duyệt!');
+      return res.redirect('/admin/transaction-approval');
+    }
+
+    await UserModel.findByIdAndUpdate(transactionUser.id, { balance: transactionUser.balance - (transactionHistory.amount + transactionHistory.fee) }).exec();
+
+    req.flash('success', 'Phê duyệt thành công!')
+    return res.redirect('/admin/transaction-approval');
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
   }

@@ -1,0 +1,91 @@
+<%- include('./partials/header'); -%>
+<section class="pcoded-main-container">
+  <div class="pcoded-content">
+    <!-- [ breadcrumb ] start -->
+    <div class="page-header">
+      <div class="page-block">
+        <div class="row align-items-center">
+          <div class="col-md-12">
+            <div class="page-header-title">
+              <h5 class="m-b-10">Tài khoản đã kích hoạt</h5>
+            </div>
+            <ul class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/admin"><i class="feather icon-home"></i></a></li>
+              <li class="breadcrumb-item"><a href="#!">Quản lý tài khoản</a></li>
+              <li class="breadcrumb-item"><a href="#!">Tài khoản đã kích hoạt</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Danh sách tài khoản đã kích hoạt</h5>
+          </div>
+          <div class="card-body table-border-style">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Mã giao dịch</th>
+                    <th>Số tài khoản</th>
+                    <th>Họ và tên</th>
+                    <th>Số tiền rút</th>
+                    <th>Thời gian thực hiện</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% result.forEach((data, index) => { %>
+                    <tr>
+                      <td><%= ++index; %></td>
+                      <td><a type="button" data-toggle="modal" data-target="#transaction-approval" style="color: #1abc9c;" 
+                        onclick="InfoUser('<%= data.id%>', '<%= data.user_fullname%>')"><%= data.transactionID%></a>
+                      </td>
+                      <td><%= data.username%></td>
+                      <td><%= data.user_fullname; %></td>
+                      <td><%= data.amount; %></td>
+                      <td><%= data.made_at; %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function InfoUser(id, infoName) {
+        document.getElementById("id").value = id;
+        document.getElementById("infoName").innerHTML = infoName;
+      }
+    </script>
+
+    <div id="transaction-approval" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="transaction-approvalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="transaction-approvalTitle">XÁC NHẬN PHÊ DUYỆT GIAO DỊCH</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body">
+            <p>Bạn có muốn xác nhận giao dịch cho người dùng <strong id="infoName"></strong>?</p>
+          </div>
+          <div class="modal-footer">
+            <form action="" method="post">
+              <input type="hidden" id="id" name="id">
+              <button type="submit" class="btn btn-sm btn-primary" name="transaction" value="1">Phê duyệt</button>
+              <button type="submit" class="btn btn-sm btn-danger" name="transaction" value="0">Từ chối</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ Main Content ] end -->
+  </div>
+</section>
+<%- include('./partials/footer'); -%>
