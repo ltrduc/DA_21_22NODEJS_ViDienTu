@@ -1,0 +1,78 @@
+<%- include('./partials/header'); -%>
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+              <div class="page-block">
+                <div class="row align-items-center">
+                  <div class="col-md-12">
+                    <div class="page-header-title">
+                      <h5 class="m-b-10">Mua thẻ điện thoại</h5>
+                    </div>
+                    <ul class="breadcrumb">
+                      <li class="breadcrumb-item"><a href=""><i class="feather icon-home"></i></a></li>
+                      <li class="breadcrumb-item"><a href="#!">Dịch Vụ</a></li>
+                      <li class="breadcrumb-item"><a href="#!">Mua thẻ điện thoại</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- [ breadcrumb ] end -->
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Mua thẻ điện thoại</h5>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-5 col-md-7 col-sm-9 col-11 mx-auto">
+                      <div class="grid pt-2 pb-1">
+                        <div class="grid-body pt-1 pb-1">
+                          <div class="row">
+                            <div class="col-lg-12 col-md-8 col-sm-9 col-12 mx-auto form-wrapper">
+                              <form action="/phone-card" method="post">
+                                <div>
+                                  <select name="operator" class="form-control">
+                                    <option value="Viettel">Viettel</option>
+                                    <option value="Mobifone">Mobifone</option>
+                                    <option value="Vinaphone">Vinaphone</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <select name="amount" class="form-control">
+                                    <option value=10000>10,000đ</option>
+                                    <option value=20000>20,000đ</option>
+                                    <option value=50000>50,000đ</option>
+                                    <option value=100000>100,000đ</option>
+                                  </select>
+                                </div>
+                                <div class="form-group input-rounded">
+                                  <input type="number" class="form-control" name="number"
+                                    placeholder="Số lượng thẻ muốn mua" />
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block"> Xác nhận </button>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('./partials/footer'); -%>
