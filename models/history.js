@@ -8,7 +8,10 @@ const history = new mongoose.Schema({
     recipient_fullname: String,
     transaction_type: String, //tên loại giao dịch: nạp tiền, rút tiền, chuyển tiền, mua thẻ điện thoại
     amount: Number, //số tiền
-    phonecardNumber: Number, //mã thẻ điện thoại
+    operator: String, //nhà mạng viễn thông
+    phonecard_amount: Number, //mệnh giá thẻ điện thoại
+    phonecard_number: Number, // số lượng thẻ điên thoại
+    phonecardNumber: Array, //mã thẻ điện thoại
     fee: Number, //phí thực hiện giao dịch
     message: String,
     status: String, // đang chờ, thành công hoặc thất bại 
