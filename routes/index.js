@@ -531,7 +531,7 @@ router.get('/history', Permission.AccountActivated, async function (req, res) {
   try {
     var rechargeHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Nạp tiền" }).sort({ made_at: -1 }).exec();
     var withdrawHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
-    var phonecardHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
+    var phonecardHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Mua thẻ điện thoại" }).sort({ made_at: -1 }).exec();
     //Các loại giao dịch khác
     res.render('user/history', {
       user: req.session.user,
