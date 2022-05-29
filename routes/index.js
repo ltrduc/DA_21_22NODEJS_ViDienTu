@@ -531,11 +531,12 @@ router.get('/history', Permission.AccountActivated, async function (req, res) {
   try {
     var rechargeHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Nạp tiền" }).sort({ made_at: -1 }).exec();
     var withdrawHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
+    var phonecardHistory = await HistoryModel.find({ userID: req.session.user.id, transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
     //Các loại giao dịch khác
     res.render('user/history', {
       user: req.session.user,
       error: req.flash('error') || '',
-      recharge: rechargeHistory, withdraw: withdrawHistory
+      recharge: rechargeHistory, withdraw: withdrawHistory, phonecard: phonecardHistory
     });
   } catch (error) {
     return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
