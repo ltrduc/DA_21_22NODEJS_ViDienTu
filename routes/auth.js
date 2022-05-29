@@ -89,13 +89,13 @@ router.post('/login', LoginValidator, async (req, res, next) => {
       if (user.role == 1) {
         var pass = await PasswordModel.findOne({ id_user: user.id }).exec();
 
-        if (pass.error == 6) {
+        if (pass.error == 4) {
           await PermissionModel.findOneAndUpdate({ id_user: user.id }, { account_blocked: 1 }).exec();
           req.flash('error', 'Tài khoản đã bị khóa do nhập sai mật khẩu nhiều lần, vui lòng liên hệ quản trị viên để được hỗ trợ!');
           return res.redirect('/auth/login');
         }
 
-        if (pass.error == 3) {
+        if (pass.error == 2) {
           if (((new Date()) - pass.time_be_unblocked) >= 100000) {
             await PasswordModel.findOneAndUpdate({ id_user: user.id }, { error: (pass.error + 1), time_be_unblocked: new Date() }).exec();
             req.flash('error', 'Số tài khoản hoặc mật khẩu không tồn tại!');
