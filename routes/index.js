@@ -382,27 +382,27 @@ router.post('/phone-card', Permission.AccountActivated, PhoneCardValidator, asyn
     }
 
     if (operator == "Viettel"){
-      fix_numer = 11111;
+      fix_number = 11111;
       while(phone_card_num.length < number){
-        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ; //Tạo số có 5 chữ số ngẫu nhiên đôi một khác nhau từ 0 - 99999
+        var r = fix_number * 100000 + Math.floor(Math.random() * 100000) ; //Tạo số có 5 chữ số ngẫu nhiên đôi một khác nhau từ 0 - 99999
         if(phone_card_num.indexOf(r) === -1){
           phone_card_num.push(r);
         } 
       }
     }
     else if (operator == "Mobifone"){
-      fix_numer = 22222;
+      fix_number = 22222;
       while(phone_card_num.length < number){
-        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ;
+        var r = fix_number * 100000 + Math.floor(Math.random() * 100000) ;
         if(phone_card_num.indexOf(r) === -1){
           phone_card_num.push(r);
         }
       } 
     }
     else if (operator == "Vinaphone"){
-      fix_numer = 33333;
+      fix_number = 33333;
       while(phone_card_num.length < number){
-        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ;
+        var r = fix_number * 100000 + Math.floor(Math.random() * 100000) ;
         if(phone_card_num.indexOf(r) === -1){
           phone_card_num.push(r);
         } 
