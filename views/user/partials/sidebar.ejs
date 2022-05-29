@@ -4,7 +4,7 @@
     <div class="navbar-content scroll-div">
       <div class="">
         <div class="main-menu-header">
-          <img class="img-radius" src="bootstrap/images/user/avatar-2.jpg" alt="User-Profile-Image">
+          <img class="img-radius" src="/bootstrap/images/user/avatar-2.jpg" alt="User-Profile-Image">
           <div class="user-details">
             <span><%= user.fullname %></span>
             <div style="font-size: 12px;">Số tiền: <%= user.balance %></div>
@@ -23,23 +23,23 @@
           <label>Dịch vụ</label>
         </li>
         <li class="nav-item">
-          <a href="recharge" class="nav-link "><span class="pcoded-micon"><i 
+          <a href="/recharge" class="nav-link "><span class="pcoded-micon"><i 
                 class="fa fa-credit-card" aria-hidden="true"></i></span><span class="pcoded-mtext">Nạp tiền</span></a>
         </li>
         <li class="nav-item">
-          <a href="withdraw" class="nav-link "><span class="pcoded-micon"><i 
+          <a href="/withdraw" class="nav-link "><span class="pcoded-micon"><i 
                 class="fa fa-credit-card" aria-hidden="true"></i></span><span class="pcoded-mtext">Rút tiền</span></a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link "><span class="pcoded-micon"><i 
+          <a href="/transfer" class="nav-link "><span class="pcoded-micon"><i 
                 class="fa fa-credit-card" aria-hidden="true"></i></span><span class="pcoded-mtext">Chuyển tiền</span></a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link "><span class="pcoded-micon"><i 
+          <a href="/phone-card" class="nav-link "><span class="pcoded-micon"><i 
                 class="fa fa-mobile" aria-hidden="true"></i></span><span class="pcoded-mtext">Mua thẻ điện thoại</span></a>
         </li>
         <li class="nav-item">
-          <a href="history" class="nav-link "><span class="pcoded-micon"><i 
+          <a href="/history" class="nav-link "><span class="pcoded-micon"><i 
                 class="fa fa-history" aria-hidden="true"></i></span><span class="pcoded-mtext">Lịch sử giao dịch</span></a>
         </li>
         <%if (user.activate.account_activated == 0 && user.id_card.length < 2) { %>
