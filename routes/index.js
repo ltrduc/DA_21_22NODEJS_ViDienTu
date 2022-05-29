@@ -19,6 +19,7 @@ const Permission = require('../middleware/permission');
 // Import Validators
 const RechargeValidator = require('./validators/recharge');
 const WithdrawValidator = require('./validators/withdraw');
+const PhoneCardValidator = require('./validators/phone-card');
 const ChangePasswordValidator = require('./validators/change-password-user');
 
 const upload = multer({
@@ -338,6 +339,103 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
 | CHỨC NĂNG MUA THẺ ĐIỆN THOẠI
 |------------------------------------------------------------------------------------------------------
 */
+
+router.get('/phone-card', Permission.AccountActivated, function (req, res) {
+  try {
+    res.render('user/phone-card', {
+      user: req.session.user,
+      error: req.flash('error')
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+router.post('/phone-card', Permission.AccountActivated, PhoneCardValidator, async function (req, res) {
+  try {
+    var result = validationResult(req);
+    var { operator, amount, number } = req.body;
+    amount = Number.parseInt(amount);
+    var fix_numer = 0;
+
+    var user = await UserModel.findById(req.session.user.id).exec();
+    var balance = Number.parseInt(user.balance);
+
+    var phone_card_num = [];
+
+    if (result.errors.length !== 0) {
+      result = result.mapped();
+      for (fields in result) {
+        req.flash('error', result[fields].msg);
+        return res.redirect('/phone-card');
+      }
+    }
+
+    if (number > 5){
+      req.flash('error', 'Bạn chỉ được phép mua tối đa 5 thẻ một lần.');
+      return res.redirect('/phone-card');
+    }
+
+    if ( (amount * number) > balance ) {
+      req.flash('error', 'Số dư trong tài khoản không đủ để thực hiện giao dịch.');
+      return res.redirect('/phone-card');
+    }
+
+    if (operator == "Viettel"){
+      fix_numer = 11111;
+      while(phone_card_num.length < number){
+        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ; //Tạo số có 5 chữ số ngẫu nhiên đôi một khác nhau từ 0 - 99999
+        if(phone_card_num.indexOf(r) === -1){
+          phone_card_num.push(r);
+        } 
+      }
+    }
+    else if (operator == "Mobifone"){
+      fix_numer = 22222;
+      while(phone_card_num.length < number){
+        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ;
+        if(phone_card_num.indexOf(r) === -1){
+          phone_card_num.push(r);
+        }
+      } 
+    }
+    else if (operator == "Vinaphone"){
+      fix_numer = 33333;
+      while(phone_card_num.length < number){
+        var r = fix_numer * 100000 + Math.floor(Math.random() * 100000) ;
+        if(phone_card_num.indexOf(r) === -1){
+          phone_card_num.push(r);
+        } 
+      }
+    }
+
+    UserModel.findByIdAndUpdate({ _id: user._id }, { balance: balance - amount * number, status: 1 }, (error, data) => {
+      if (error) {
+        req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
+        return res.redirect('/phone-card');
+      }
+    })
+
+    while (true) {
+      var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
+      if (!await HistoryModel.findOne({ transactionID }).exec()) {
+        var history = await HistoryModel.create({ transactionID: transactionID, username: user.username, user_fullname: user.fullname, transaction_type: "Mua thẻ điện thoại", amount: amount * number, operator: operator, phonecard_amount: amount, phonecard_number: number, phonecardNumber: phone_card_num , status: "Thành công" });
+        return res.render('user/phone-card-bought', 
+        { user: req.session.user, 
+          error: req.flash('error'),
+          operator: operator, 
+          amount: amount, 
+          number: number,
+          phone_card_num: phone_card_num 
+        });
+      }
+    }
+  }
+  catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+
+})
 
 /*
 |------------------------------------------------------------------------------------------------------
