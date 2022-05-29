@@ -226,11 +226,62 @@ router.post('/account-blocked', async (req, res, next) => {
 
 /*
 |------------------------------------------------------------------------------------------------------
+| TRANG LỊCH SỬ GIAO DỊCH
+|------------------------------------------------------------------------------------------------------
+*/
+
+// Lịch sử nạp tiền
+router.get('/recharge-history', async function (req, res, next) {
+  try {
+    var rechargeHistory = await HistoryModel.find({ transaction_type: "Nạp tiền" }).sort({ made_at: -1 }).exec();
+    res.render('admin/recharge-history', {
+      user: req.session.user,
+      error: req.flash('error') || '',
+      success: req.flash('success') || '',
+      recharge: rechargeHistory,
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+// Lịch sử rút tiền
+router.get('/withdraw-history', async function (req, res, next) {
+  try {
+    var withdrawHistory = await HistoryModel.find({ transaction_type: "Rút tiền" }).sort({ made_at: -1 }).exec();
+    res.render('admin/withdraw-history', {
+      user: req.session.user,
+      error: req.flash('error') || '',
+      success: req.flash('success') || '',
+      withdraw: withdrawHistory,
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+// Lịch sử mua thẻ điện thoại
+router.get('/phone-card-history', async function (req, res, next) {
+  try {
+    var phonecardHistory = await HistoryModel.find({ transaction_type: "Mua thẻ điện thoại" }).sort({ made_at: -1 }).exec();
+    res.render('admin/phone-card-history', {
+      user: req.session.user,
+      error: req.flash('error') || '',
+      success: req.flash('success') || '',
+      phonecard: phonecardHistory,
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
+
+/*
+|------------------------------------------------------------------------------------------------------
 | TRANG PHÊ DUYỆT LỊCH SỬ GIAO DỊCH
 |------------------------------------------------------------------------------------------------------
 */
 
-router.get('/transaction-approval', async function (req, res) {
+router.get('/transaction-approval', async function (req, res, next) {
   try {
     var result = await HistoryModel.find({ transaction_type: "Rút tiền", transaction_allowed: 0 }).sort({ made_at: -1 }).exec();
 

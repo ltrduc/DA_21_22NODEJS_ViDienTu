@@ -1,0 +1,71 @@
+<%- include('./partials/header'); -%>
+  <section class="pcoded-main-container">
+    <div class="pcoded-content">
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h5 class="m-b-10">Lịch sử mua thẻ điện thoại</h5>
+              </div>
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin"><i class="feather icon-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="#!">Lịch sử giao dịch</a></li>
+                <li class="breadcrumb-item"><a href="#!">Lịch sử mua thẻ điện thoại</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Danh sách Lịch sử mua thẻ điện thoại</h5>
+            </div>
+            <div class="card-body table-border-style">
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Họ và tên</th>
+                      <th>Nhà mạng</th>
+                      <th>Mệnh giá</th>
+                      <th>Số lượng thẻ</th>
+                      <th>Tổng giá</th>
+                      <th>Mã thẻ</th>
+                      <th>Thời gian thực hiện giao dịch</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% phonecard.forEach((field, index) => { %>
+                      <tr>
+                        <td><%= ++index; %></td>
+                        <td><%= field.user_fullname; %></td>
+                        <td><%= field.operator; %></td>
+                        <td><%= field.phonecard_amount; %></td>
+                        <td><%= field.phonecard_number; %></td>
+                        <td><%= field.phonecard_amount * field.phonecard_number; %></td>
+                        <td>
+                          <ul>
+                            <% field.phonecardNumber.forEach(num => { %>
+                                <li> <%= num %> </li>
+                            <% }) %>                                   
+                          </ul>
+                        </td>
+                        <td><%= field.made_at; %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ Main Content ] end -->
+    </div>
+  </section>
+<%- include('./partials/footer'); -%>
