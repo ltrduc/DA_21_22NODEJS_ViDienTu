@@ -78,8 +78,8 @@
           <div class="modal-footer">
             <form action="" method="post">
               <input type="hidden" id="id" name="id">
-              <button type="submit" class="btn btn-sm btn-primary" name="transaction" value="1">Phê duyệt</button>
-              <button type="submit" class="btn btn-sm btn-danger" name="transaction" value="0">Từ chối</button>
+              <button onclick="return confirm('Bạn có chắc muốn xác nhận thao tác?')" type="submit" class="btn btn-sm btn-primary" name="transaction" value="1">Phê duyệt</button>
+              <button onclick="return confirm('Bạn có chắc muốn xác nhận thao tác?')" type="submit" class="btn btn-sm btn-danger" name="transaction" value="0">Từ chối</button>
             </form>
           </div>
         </div>
