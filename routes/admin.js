@@ -41,7 +41,7 @@ router.get('/account-wait-activated', async (req, res, next) => {
 
     for (var i = 0; i < id_user.length; i++) {
       var data = await UserModel.findOne({ _id: id_user[i].id_user, role: 1 }).exec();
-      if (data) {
+      if (data && data.id_card.length == 2) {
         result.push(data);
       }
     }
