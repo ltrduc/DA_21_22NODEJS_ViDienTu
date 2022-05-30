@@ -44,6 +44,7 @@
                     </li>
                   </ul>
                   <div class="tab-content" id="pills-tabContent">
+                    <!-- Lịch sử nạp tiền -->
                     <div class="tab-pane fade show active" id="pills-recharge" role="tabpanel" aria-labelledby="pills-recharge-tab">
                       <!-- code here -->
                       <div class="card">
@@ -56,20 +57,24 @@
                               <thead>
                                 <tr>
                                   <th>#</th>
-                                  <th>Họ và tên</th>
+                                  <th>Mã giao dịch</th>
+                                  <th>Số tài khoản</th>
                                   <th>Số tiền</th>
+                                  <th>Phí giao dịch</th>
                                   <th>Trạng thái</th>
-                                  <th>Thời gian thực hiện giao dịch</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <% recharge.forEach((field, index) => { %>
                                   <tr>
                                     <td><%= ++index; %></td>
-                                    <td><%= field.user_fullname; %></td>
+                                    <td><a type="button" data-toggle="modal" data-target="#history1" style="color: #1abc9c;"
+                                      onclick="history1('<%= field.id%>', '<%= field.transactionID%>', '<%= field.username%>', '<%= field.user_fullname%>', '<%= field.transaction_type%>', '<%= field.amount%>', '<%= field.status%>', '<%= field.made_at%>')">
+                                      <%= field.transactionID%></a></td>
+                                    <td><%= field.username; %></td>
                                     <td><%= field.amount; %></td>
+                                    <td>0</td>
                                     <td><%= field.status; %></td>
-                                    <td><%= field.made_at; %></td>
                                   </tr>
                                 <% }) %>
                               </tbody>
@@ -77,7 +82,92 @@
                           </div>
                         </div>
                       </div>
+                      <script>
+                        function history1(id, transactionID, username, user_fullname, transaction_type, amount, status, made_at) {
+                          document.getElementById("history1-id").value = id;
+                          document.getElementById("history1-transactionID").value = transactionID;
+                          document.getElementById("history1-username").value = username;
+                          document.getElementById("history1-user_fullname").value = user_fullname;
+                          document.getElementById("history1-transaction_type").value = transaction_type;
+                          document.getElementById("history1-amount").value = amount;
+                          document.getElementById("history1-status").value = status;
+                          document.getElementById("history1-made_at").value = made_at;
+                          document.getElementById("history1-result").value = amount;
+                        }
+                      </script>
+                      <div id="history1" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="history1Title" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="history1Title">THÔNG TIN GIAO DỊCH</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body">
+                              <form>
+                                <input type="hidden" id="history1-id" name="id">
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mã giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-transactionID">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tài khoản: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-username">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tên người dùng: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-user_fullname">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-transaction_type">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tiền giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-amount">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Phí giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" value="0" class="form-control-plaintext" id="history1-fee">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Trạng thái: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-status">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Thời gian: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-made_at">
+                                  </div>
+                                </div>
+                                <hr>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tổng tiền: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history1-result">
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    <!-- lịch sử rút tiền -->
                     <div class="tab-pane fade" id="pills-withdraw" role="tabpanel" aria-labelledby="pills-withdraw-tab">
                       <div class="card">
                         <div class="card-header">
@@ -89,22 +179,24 @@
                               <thead>
                                 <tr>
                                   <th>#</th>
-                                  <th>Họ và tên</th>
+                                  <th>Mã giao dịch</th>
+                                  <th>Số tài khoản</th>
                                   <th>Số tiền</th>
                                   <th>Phí giao dịch</th>
                                   <th>Trạng thái</th>
-                                  <th>Thời gian thực hiện giao dịch</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <% withdraw.forEach((field, index) => { %>
                                   <tr>
                                     <td><%= ++index; %></td>
-                                    <td><%= field.user_fullname; %></td>
+                                    <td><a type="button" data-toggle="modal" data-target="#history2" style="color: #1abc9c;"
+                                      onclick="history2('<%= field.id%>', '<%= field.transactionID%>', '<%= field.username%>', '<%= field.user_fullname%>', '<%= field.transaction_type%>', '<%= field.amount%>', '<%= field.fee%>', '<%= field.message%>', '<%= field.status%>', '<%= field.made_at%>')">
+                                      <%= field.transactionID%></a></td>
+                                    <td><%= field.username; %></td>
                                     <td><%= field.amount; %></td>
                                     <td><%= field.fee; %></td>
                                     <td><%= field.status; %></td>
-                                    <td><%= field.made_at; %></td>
                                   </tr>
                                 <% }) %>
                               </tbody>
@@ -112,12 +204,108 @@
                           </div>
                         </div>
                       </div>
+                      <script>
+                        function history2(id, transactionID, username, user_fullname, transaction_type, amount, fee, message, status, made_at) {
+                          document.getElementById("history2-id").value = id;
+                          document.getElementById("history2-transactionID").value = transactionID;
+                          document.getElementById("history2-username").value = username;
+                          document.getElementById("history2-user_fullname").value = user_fullname;
+                          document.getElementById("history2-transaction_type").value = transaction_type;
+                          document.getElementById("history2-amount").value = amount;
+                          document.getElementById("history2-fee").value = fee;
+                          document.getElementById("history2-message").value = message;
+                          document.getElementById("history2-status").value = status;
+                          document.getElementById("history2-made_at").value = made_at;
+                          document.getElementById("history2-result").value = parseInt(amount) + parseInt(fee);
+                        }
+                      </script>
+                
+                      <div id="history2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="history2Title" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="history2Title">THÔNG TIN GIAO DỊCH</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body">
+                              <form>
+                                <input type="hidden" id="history2-id" name="id">
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mã giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-transactionID">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tài khoản: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-username">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tên người dùng: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-user_fullname">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-transaction_type">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tiền giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-amount">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Phí giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" value="0" class="form-control-plaintext" id="history2-fee">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Nội dung giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <textarea class="form-control-plaintext" readonly="" disabled id="history2-message" cols="10" rows="3"></textarea>
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Trạng thái: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-status">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Thời gian: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-made_at">
+                                  </div>
+                                </div>
+                                <hr>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tổng tiền: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history2-result">
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    <!-- Lịch sử chuyển tiền -->
                     <div class="tab-pane fade" id="pills-transfers" role="tabpanel" aria-labelledby="pills-transfers-tab">
                       <!-- giao diện lịch sử chuyển tiền -->
                     </div>
+
+                    <!-- Lịch sử mua thẻ điện thoại -->
                     <div class="tab-pane fade" id="pills-pay" role="tabpanel" aria-labelledby="pills-pay-tab">
-                       <div class="card">
+                      <div class="card">
                         <div class="card-header">
                           <h5>Lịch sử mua thẻ điện thoại</h5>
                         </div>
@@ -127,36 +315,148 @@
                               <thead>
                                 <tr>
                                   <th>#</th>
-                                  <th>Họ và tên</th>
-                                  <th>Nhà mạng</th>
-                                  <th>Mệnh giá</th>
+                                  <th>Mã giao dịch</th>
+                                  <th>Số tài khoản</th>
+                                  <th>Số tiền</th>
+                                  <th>Phí giao dịch</th>
+                                  <th>Loại thẻ</th>
                                   <th>Số lượng thẻ</th>
-                                  <th>Tổng giá</th>
-                                  <th>Mã thẻ</th>
-                                  <th>Thời gian thực hiện giao dịch</th>
+                                  <th>Trạng thái</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <% phonecard.forEach((field, index) => { %>
                                   <tr>
                                     <td><%= ++index; %></td>
-                                    <td><%= field.user_fullname; %></td>
-                                    <td><%= field.operator; %></td>
-                                    <td><%= field.phonecard_amount; %></td>
-                                    <td><%= field.phonecard_number; %></td>
+                                    <td><a type="button" data-toggle="modal" data-target="#history4" style="color: #1abc9c;"
+                                      onclick="history4('<%= field.id%>', '<%= field.transactionID%>', '<%= field.username%>', '<%= field.user_fullname%>', 
+                                      '<%= field.transaction_type%>', '<%= field.amount%>', '<%= field.operator%>', '<%= field.phonecard_number%>', '<%= field.phonecardNumber%>', '<%= field.status%>', '<%= field.made_at%>')">
+                                      <%= field.transactionID%></a></td>
+                                    <td><%= field.username; %></td>
                                     <td><%= field.phonecard_amount * field.phonecard_number; %></td>
-                                    <td>
-                                      <ul>
-                                        <% field.phonecardNumber.forEach(num => { %>
-                                            <li> <%= num %> </li>
-                                        <% }) %>                                   
-                                      </ul>
-                                    </td>
-                                    <td><%= field.made_at; %></td>
+                                    <td>0</td>
+                                    <td><%= field.operator; %></td>
+                                    <td><%= field.phonecard_number; %></td>
+                                    <td><%= field.status; %></td>
                                   </tr>
                                 <% }) %>
                               </tbody>
                             </table>
+                          </div>
+                        </div>
+                      </div>
+                      <script>
+                        function history4(id, transactionID, username, user_fullname, transaction_type, amount, operator, phonecard_number, phonecardNumber, status, made_at) {
+                          document.getElementById("history4-id").value = id;
+                          document.getElementById("history4-transactionID").value = transactionID;
+                          document.getElementById("history4-username").value = username;
+                          document.getElementById("history4-user_fullname").value = user_fullname;
+                          document.getElementById("history4-transaction_type").value = transaction_type;
+                          document.getElementById("history4-amount").value = amount;
+                          document.getElementById("history4-operator").value = operator;
+                          document.getElementById("history4-phonecard_number").value = phonecard_number;
+                
+                          var idCard = [];
+                          for (let index = 0; index < phonecardNumber.length; index++) {
+                            if (phonecardNumber[index] == ',') {
+                              idCard = idCard + '   -   ';
+                            } else {
+                              idCard = idCard + phonecardNumber[index];
+                            }
+                          }
+                
+                          document.getElementById("history4-phonecardNumber").value = idCard;
+                          document.getElementById("history4-status").value = status;
+                          document.getElementById("history4-made_at").value = made_at;
+                          document.getElementById("history4-result").value = amount;
+                        }
+                      </script>
+                
+                      <div id="history4" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="history4Title" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="history4Title">THÔNG TIN GIAO DỊCH</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body">
+                              <form>
+                                <input type="hidden" id="history4-id" name="id">
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mã giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-transactionID">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tài khoản: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-username">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tên người dùng: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-user_fullname">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-transaction_type">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tiền giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-amount">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại thẻ: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-operator">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số lượng thẻ: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-phonecard_number">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mã thẻ: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-phonecardNumber">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Phí giao dịch: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" value="0" class="form-control-plaintext" id="history4-fee">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Trạng thái: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-status">
+                                  </div>
+                                </div>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Thời gian: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-made_at">
+                                  </div>
+                                </div>
+                                <hr>
+                                <div class="form-group row mb-0">
+                                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tổng tiền: </label>
+                                  <div class="col-sm-8">
+                                      <input type="text" readonly="" class="form-control-plaintext" id="history4-result">
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
                           </div>
                         </div>
                       </div>
