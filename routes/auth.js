@@ -417,10 +417,11 @@ router.get('/reset-password', (req, res, next) => {
 router.post('/reset-password', ResetPasswordValidator, async (req, res, next) => {
   try {
     var result = validationResult(req);
-    var { email } = req.body;
+    var { email, phone } = req.body;
 
     req.flash('email', email);
-
+    req.flash('phone', phone);
+    
     if (result.errors.length !== 0) {
       result = result.mapped();
       for (fields in result) {
@@ -429,10 +430,10 @@ router.post('/reset-password', ResetPasswordValidator, async (req, res, next) =>
       }
     }
 
-    var user = await UserModel.findOne({ email }).exec();
+    var user = await UserModel.findOne({ email, phone }).exec();
 
     if (!user) {
-      req.flash('error', 'Đỉa chỉ email không tồn tại!');
+      req.flash('error', 'Đỉa chỉ email hoặc số điện thoại không tồn tại!');
       return res.redirect('/auth/reset-password');
     }
 
