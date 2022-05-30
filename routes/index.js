@@ -11,10 +11,8 @@ const UserModel = require('../models/user');
 const HistoryModel = require('../models/history');
 const PasswordModel = require('../models/password');
 const PermissionModel = require('../models/permission');
-const Otp = require('../models/OTP');
 
 // Import Middleware
-const Auth = require('../middleware/auth');
 const Permission = require('../middleware/permission');
 
 // Import Validators
