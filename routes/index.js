@@ -389,8 +389,7 @@ router.post('/phone-card', Permission.AccountActivated, PhoneCardValidator, asyn
           phone_card_num.push(r);
         } 
       }
-    }
-    else if (operator == "Mobifone"){
+    } else if (operator == "Mobifone"){
       fix_number = 22222;
       while(phone_card_num.length < number){
         var r = fix_number * 100000 + Math.floor(Math.random() * 100000) ;
@@ -398,8 +397,7 @@ router.post('/phone-card', Permission.AccountActivated, PhoneCardValidator, asyn
           phone_card_num.push(r);
         }
       } 
-    }
-    else if (operator == "Vinaphone"){
+    } else if (operator == "Vinaphone"){
       fix_number = 33333;
       while(phone_card_num.length < number){
         var r = fix_number * 100000 + Math.floor(Math.random() * 100000) ;
@@ -414,6 +412,7 @@ router.post('/phone-card', Permission.AccountActivated, PhoneCardValidator, asyn
         req.flash('error', 'Lỗi trong quá trình xữ lý, vui lòng thử lại!' + req.session.user)
         return res.redirect('/phone-card');
       }
+      req.session.user.balance = balance - amount * number;
     })
 
     while (true) {
