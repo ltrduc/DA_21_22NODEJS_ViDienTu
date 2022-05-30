@@ -1,0 +1,86 @@
+<%- include('./partials/header'); -%>
+  <!-- [ Main Content ] start -->
+  <div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+      <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+          <div class="main-body">
+            <div class="page-wrapper">
+              <!-- [ breadcrumb ] start -->
+              <div class="page-header">
+                <div class="page-block">
+                  <div class="row align-items-center">
+                    <div class="col-md-12">
+                      <div class="page-header-title">
+                        <h5 class="m-b-10">Chuyển tiền</h5>
+                      </div>
+                      <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                        <li class="breadcrumb-item"><a href="#!">Dịch Vụ</a></li>
+                        <li class="breadcrumb-item"><a href="#!">Chuyển tiền</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- [ breadcrumb ] end -->
+              <!-- [ Main Content ] start -->
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>Chuyển tiền</h5>
+                    </div>
+                    <div class="row">
+                      <div class="col-lg-5 col-md-7 col-sm-9 col-11 mx-auto">
+                        <div class="grid pt-2 pb-1">
+                          <div class="grid-body pt-1 pb-1">
+                            <div class="row">
+                              <div class="col-lg-12 col-md-8 col-sm-9 col-12 mx-auto form-wrapper">
+                                <form action="/transfer" method="post">
+                                  <div class="form-group input-rounded">
+                                    <input type="number" class="form-control" name="phoneReceiver" placeholder="Số điện thoại người nhận" />
+                                  </div>
+                                  <div class="form-group input-rounded">
+                                    <input type="text" class="form-control" name="nameReceiver" placeholder="Tên người nhận" />
+                                  </div>
+                                  <div class="form-group input-rounded">
+                                    <input type="number" class="form-control" name="money" placeholder="Số tiền" />
+                                  </div>
+                                  <div class="form-group input-rounded">
+                                    <input type="text" class="form-control" name="note" placeholder="Ghi chú" />
+                                  </div>
+                                  <div class="form-group input-rounded">
+                                    <select name="transaction-fee" class="form-control">
+                                      <option value="">Phí giao dịch</option>
+                                      <option value="Người gửi">Người gửi</option>
+                                      <option value="Người nhận">Người nhận</option>
+                                    </select>
+                                  </div>
+                                  <div class="form-group input-rounded">
+                                    <div class="row">
+                                      <div class="col-7"><input type="text" class="form-control" placeholder="Mã OTP" name="otp"></div>
+                                      <div class="col-5">
+                                        <button type="button" class="btn btn-outline-success">Lấy mã OTP</button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button type="submit" class="btn btn-primary btn-block"> Xác nhận </button>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- [ Main Content ] end -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- include('./partials/footer'); -%>
