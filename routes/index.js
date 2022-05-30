@@ -11,6 +11,7 @@ const UserModel = require('../models/user');
 const HistoryModel = require('../models/history');
 const PasswordModel = require('../models/password');
 const PermissionModel = require('../models/permission');
+const Otp = require('../models/OTP');
 
 // Import Middleware
 const Auth = require('../middleware/auth');
@@ -332,7 +333,165 @@ router.post('/withdraw', Permission.AccountActivated, WithdrawValidator, async f
 |------------------------------------------------------------------------------------------------------
 */
 
+router.get('/transfer', Permission.AccountActivated, function (req, res) {
+  try {
+    res.render('user/transfer', {
+      user: req.session.user,
+      error: req.flash('error'),
+      success: req.flash('success') || '',
+      cardNumber: req.flash('cardNumber') || '',
+      expDate: req.flash('expDate') || '',
+      cvv: req.flash('cvv') || '',
+      amount: req.flash('amount') || '',
+      desc: req.flash('desc') || '',
+    });
+  } catch (error) {
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+})
 
+router.post('/transfer', Permission.AccountActivated, async function (req, res) {
+  try {
+    //var result = validationResult(req);
+    let { phoneReceiver, nameReceiver, money, note, transaction_fee, otp } = req.body;
+    const receiver = await UserModel.findOne({ phoneReceiver });
+    
+    var user = await UserModel.findById(req.session.user.id).exec();
+    // const findOtp = await Otp.findOne({
+    //     phone: user.phone,
+    //     otp,
+    //     type: "tranfer_money",
+    // });
+    // if (!findOtp) {
+    //     req.flash("Mã OTP không hợp lệ")
+    //     return res.redirect("/user/tranfer");     
+    // }
+    if (!receiver) {
+      console.log("Không tìm thấy người nhận")
+      req.flash("Không tìm thấy người nhận")
+      return res.redirect("/transfer"); 
+    }
+    if (phoneReceiver === user.phone) {
+      console.log("Không thể tự chuyển tiền cho chính mình")
+      req.flash("Không thể tự chuyển tiền cho chính mình")
+      return res.redirect("/transfer"); 
+    }
+    let feePrice = parseInt(money) * 0.05;
+    let total = parseInt(money) + parseInt(feePrice);
+    console.log(total)
+    if (user.balance < money) {
+      console.log("Không đủ tiền trong tài khoản")
+      req.flash("Không đủ tiền trong tài khoản")
+      return res.redirect("/transfer"); 
+    }
+
+    if (
+        money > user.balance ||
+        (transaction_fee === "Người gửi" && total > user.balance)
+    ) {
+      console.log("Không đủ tiền trong tài khoản")
+      req.flash("Không đủ tiền trong tài khoản")
+      return res.redirect("/transfer"); 
+    }
+
+    //HERE
+    if (money < 5000000) {
+        // let data = {
+        //     phone: user.phone,
+        //     recipient_username: phoneReceiver,
+        //     amount: money,
+        //     fee: feePrice,
+        //     total,
+        //     transaction_type: "tranfer_money",
+        //     message: note,
+        //     status: "success",
+        // };
+
+        var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
+        if (!await HistoryModel.findOne({ transactionID }).exec()) { // kiểm tra id giao dịch tồn tại chưa
+          let data_ = {
+            transactionID: transactionID,
+            username: user.username,
+            user_fullname: user.user_fullname,
+            recipient_phone: phoneReceiver,
+            recipient_fullname: receiver.user_fullname,
+            transaction_type: "Chuyển tiền",
+            amount: money,
+            total: total,
+            fee: feePrice,
+            message: note,
+            status: "Thành công",
+          };
+        }
+        const his = new HistoryModel(data);
+        await his.save();
+        let newBalanceMe = 0;
+        let newBalanceReceiver = 0;
+        if (transaction_fee === "Người gửi") {
+            newBalanceMe = parseInt(user.balance) - total;
+            newBalanceReceiver =
+                parseInt(receiver.balance) + parseInt(money);
+        } else {
+            newBalanceMe = parseInt(user.balance) - parseInt(money);
+            newBalanceReceiver =
+                parseInt(receiver.balance) +
+                parseInt(money) -
+                parseInt(feePrice);
+        }
+        await UserModel.findOneAndUpdate(
+            { phone: user.phone },
+            { balance: newBalanceMe }
+        );
+        await UserModel.findOneAndUpdate(
+            { phone: phoneReceiver },
+            { balance: newBalanceReceiver }
+        );
+        console.log("Chuyển tiền thành công")
+        req.flash("Chuyển tiền thành công")
+        return res.redirect("/transfer");
+    }
+
+    // let data = {
+    //   phone: user.phone,
+    //   recipient_username: phoneReceiver,
+    //   amount: money,
+    //   fee: feePrice,
+    //   total,
+    //   transaction_type: "tranfer_money",
+    //   message: note,
+    //   status: "success",
+    // };
+
+    var transactionID = parseInt(Math.floor(Math.random() * (99999999999 - 10000000000)) + 10000000000);
+        if (!await HistoryModel.findOne({ transactionID }).exec()) { // kiểm tra id giao dịch tồn tại chưa
+          let data_ = {
+            transactionID: transactionID,
+            username: user.username,
+            user_fullname: user.user_fullname,
+            recipient_phone: phoneReceiver,
+            recipient_fullname: receiver.user_fullname,
+            transaction_type: "Chuyển tiền",
+            amount: money,
+            total: total,
+            fee: feePrice,
+            message: note,
+            status: "Đang chờ",
+          };
+        }
+
+  const his = new HistoryModel(data);
+  await his.save();
+  console.log("Đợi admin chuyển tiền")
+  req.flash("Đợi admin phê duyệt chuyển tiền")
+  return res.redirect("/transfer");
+      
+  }
+  catch (error) {
+    console.log(error)
+    return res.status(500).render('error', { error: { status: 500, stack: 'Unable to connect to the system, please try again!' }, message: 'Connection errors' });
+  }
+
+})
 
 /*
 |------------------------------------------------------------------------------------------------------
