@@ -30,27 +30,122 @@
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Họ và tên</th>
+                      <th>Mã giao dịch</th>
+                      <th>Số tài khoản</th>
                       <th>Số tiền</th>
                       <th>Phí giao dịch</th>
                       <th>Trạng thái</th>
-                      <th>Thời gian thực hiện giao dịch</th>
                     </tr>
                   </thead>
                   <tbody>
                     <% withdraw.forEach((field, index) => { %>
                       <tr>
                         <td><%= ++index; %></td>
-                        <td><%= field.user_fullname; %></td>
+                        <td><a type="button" data-toggle="modal" data-target="#transaction" style="color: #1abc9c;"
+                          onclick="InfoUser('<%= field.id%>', '<%= field.transactionID%>', '<%= field.username%>', '<%= field.user_fullname%>', '<%= field.transaction_type%>', '<%= field.amount%>', '<%= field.fee%>', '<%= field.message%>', '<%= field.status%>', '<%= field.made_at%>')">
+                          <%= field.transactionID%></a></td>
+                        <td><%= field.username; %></td>
                         <td><%= field.amount; %></td>
                         <td><%= field.fee; %></td>
                         <td><%= field.status; %></td>
-                        <td><%= field.made_at; %></td>
                       </tr>
                     <% }) %>
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function InfoUser(id, transactionID, username, user_fullname, transaction_type, amount, fee, message, status, made_at) {
+          document.getElementById("transaction-id").value = id;
+          document.getElementById("transaction-transactionID").value = transactionID;
+          document.getElementById("transaction-username").value = username;
+          document.getElementById("transaction-user_fullname").value = user_fullname;
+          document.getElementById("transaction-transaction_type").value = transaction_type;
+          document.getElementById("transaction-amount").value = amount;
+          document.getElementById("transaction-fee").value = fee;
+          document.getElementById("transaction-message").value = message;
+          document.getElementById("transaction-status").value = status;
+          document.getElementById("transaction-made_at").value = made_at;
+          document.getElementById("transaction-result").value = parseInt(amount) + parseInt(fee);
+        }
+      </script>
+
+      <div id="transaction" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="transactionTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="transactionTitle">THÔNG TIN GIAO DỊCH</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form>
+                <input type="hidden" id="transaction-id" name="id">
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mã giao dịch: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-transactionID">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tài khoản: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-username">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tên người dùng: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-user_fullname">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại giao dịch: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-transaction_type">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tiền giao dịch: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-amount">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Phí giao dịch: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" value="0" class="form-control-plaintext" id="transaction-fee">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Nội dung giao dịch: </label>
+                  <div class="col-sm-8">
+                      <textarea class="form-control-plaintext" readonly="" disabled id="transaction-message" cols="10" rows="3"></textarea>
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Trạng thái: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-status">
+                  </div>
+                </div>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Thời gian: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-made_at">
+                  </div>
+                </div>
+                <hr>
+                <div class="form-group row mb-0">
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Tổng tiền: </label>
+                  <div class="col-sm-8">
+                      <input type="text" readonly="" class="form-control-plaintext" id="transaction-result">
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
         </div>
