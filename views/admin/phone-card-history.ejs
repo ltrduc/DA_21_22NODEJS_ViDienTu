@@ -32,7 +32,7 @@
                       <th>#</th>
                       <th>Mã giao dịch</th>
                       <th>Số tài khoản</th>
-                      <th>Số tiền</th>
+                      <th>Mệnh giá</th>
                       <th>Phí giao dịch</th>
                       <th>Loại thẻ</th>
                       <th>Số lượng thẻ</th>
@@ -45,10 +45,10 @@
                         <td><%= ++index; %></td>
                         <td><a type="button" data-toggle="modal" data-target="#transaction" style="color: #1abc9c;"
                           onclick="InfoUser('<%= field.id%>', '<%= field.transactionID%>', '<%= field.username%>', '<%= field.user_fullname%>', 
-                          '<%= field.transaction_type%>', '<%= field.amount%>', '<%= field.operator%>', '<%= field.phonecard_number%>', '<%= field.phonecardNumber%>', '<%= field.status%>', '<%= field.made_at%>')">
+                          '<%= field.transaction_type%>', '<%= field.phonecard_amount%>', '<%= field.operator%>', '<%= field.phonecard_number%>', '<%= field.phonecardNumber%>', '<%= field.status%>', '<%= field.made_at%>')">
                           <%= field.transactionID%></a></td>
                         <td><%= field.username; %></td>
-                        <td><%= field.phonecard_amount * field.phonecard_number; %></td>
+                        <td><%= field.phonecard_amount; %></td>
                         <td>0</td>
                         <td><%= field.operator; %></td>
                         <td><%= field.phonecard_number; %></td>
@@ -86,7 +86,7 @@
           document.getElementById("transaction-phonecardNumber").value = idCard;
           document.getElementById("transaction-status").value = status;
           document.getElementById("transaction-made_at").value = made_at;
-          document.getElementById("transaction-result").value = amount;
+          document.getElementById("transaction-result").value = amount * phonecard_number;
         }
       </script>
 
@@ -125,13 +125,13 @@
                   </div>
                 </div>
                 <div class="form-group row mb-0">
-                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Số tiền giao dịch: </label>
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Mệnh giá thẻ: </label>
                   <div class="col-sm-8">
                       <input type="text" readonly="" class="form-control-plaintext" id="transaction-amount">
                   </div>
                 </div>
                 <div class="form-group row mb-0">
-                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Loại thẻ: </label>
+                  <label for="" style="font-weight: bold;" class="col-sm-4 col-form-label">Nhà mạng: </label>
                   <div class="col-sm-8">
                       <input type="text" readonly="" class="form-control-plaintext" id="transaction-operator">
                   </div>
