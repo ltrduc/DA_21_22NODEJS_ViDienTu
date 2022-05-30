@@ -4,10 +4,11 @@ const history = new mongoose.Schema({
     transactionID: String, //ID LSGD
     username: String, //username người thực hiện giao dịch
     user_fullname: String,
-    recipient_username: String, //username người nhận tiền (chức năng chuyển tiền)
+    recipient_phone: String, //SĐT người nhận tiền (chức năng chuyển tiền)
     recipient_fullname: String,
     transaction_type: String, //tên loại giao dịch: nạp tiền, rút tiền, chuyển tiền, mua thẻ điện thoại
     amount: Number, //số tiền
+    total: Number,
     operator: String, //nhà mạng viễn thông
     phonecard_amount: Number, //mệnh giá thẻ điện thoại
     phonecard_number: Number, // số lượng thẻ điên thoại
