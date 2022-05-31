@@ -244,26 +244,26 @@ router.post('/register', upload.array('id_card', 3), RegisterValidator, async (r
           var create_permission = await PermissionModel.create({ id_user: create_user.id });
 
           if (create_password && create_permission) {
-            // var transporter = nodemailer.createTransport({
-            //   host: `${mailHost}`,
-            //   port: `${mailPort}`,
-            //   secure: 465,
-            //   auth: {
-            //     user: `${mailUser}`,
-            //     pass: `${mailPass}`,
-            //   },
-            //   tls: {
-            //     rejectUnauthorized: false,
-            //   }
-            // });
-
             var transporter = nodemailer.createTransport({
-              service: 'gmail',
+              host: `${mailHost}`,
+              port: `${mailPort}`,
+              secure: 465,
               auth: {
                 user: `${mailUser}`,
-                pass: `${mailPass}#`,
+                pass: `${mailPass}`,
               },
+              tls: {
+                rejectUnauthorized: false,
+              }
             });
+
+            // var transporter = nodemailer.createTransport({
+            //   service: 'gmail',
+            //   auth: {
+            //     user: `${mailUser}`,
+            //     pass: `${mailPass}#`,
+            //   },
+            // });
 
             transporter.sendMail({
               from: `${mailUser}`,
@@ -454,26 +454,26 @@ router.post('/reset-password', ResetPasswordValidator, async (req, res, next) =>
       }
     })
 
-    // var transporter = nodemailer.createTransport({
-    //   host: `${mailHost}`,
-    //   port: `${mailPort}`,
-    //   secure: 465,
-    //   auth: {
-    //     user: `${mailUser}`,
-    //     pass: `${mailPass}`,
-    //   },
-    //   tls: {
-    //     rejectUnauthorized: false,
-    //   }
-    // });
-
     var transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: `${mailHost}`,
+      port: `${mailPort}`,
+      secure: 465,
       auth: {
         user: `${mailUser}`,
-        pass: `${mailPass}#`,
+        pass: `${mailPass}`,
       },
+      tls: {
+        rejectUnauthorized: false,
+      }
     });
+
+    // var transporter = nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     user: `${mailUser}`,
+    //     pass: `${mailPass}#`,
+    //   },
+    // });
 
     transporter.sendMail({
       from: `${mailUser}`,
